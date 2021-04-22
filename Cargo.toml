@@ -1,0 +1,24 @@
+[package]
+name = "database"
+version = "0.1.0"
+authors = ["ogoes <otavio@ogoes.dev>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+config = "0.11.0"
+deadpool-postgres = "0.7.0"
+dotenv = "0.15.0"
+env_logger = "0.8.3"
+log = "0.4.14"
+prost = "0.7.0"
+serde = "1.0.125"
+tokio = { version = "1.5.0", features = ["full"] }
+tokio-pg-mapper = "0.2.0"
+tokio-pg-mapper-derive = "0.2.0"
+tokio-postgres = "0.7.1"
+tonic = "0.4.2"
+
+[build-dependencies]
+tonic-build = "0.4.2"
