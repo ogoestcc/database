@@ -1,28 +1,39 @@
+use async_trait::async_trait;
+
 mod users {
-    include!(concat!(std::env!("OUT_DIR"), "/users.rs"));
-    // tonic::include_proto!("users");
+    // include!(concat!(std::env!("OUT_DIR"), "/users.rs"));
+    tonic::include_proto!("users");
 }
 
-use tonic::{Request, Response, Status};
-pub use users::users_server::{Users, UsersServer};
-use users::{Empty, User};
+pub use users::{
+    get_users_response::Metadata,
+    users_server::{Users, UsersServer},
+    GetUsersRequest, GetUsersResponse,
+};
 
 pub struct UsersService {
     pub pg_pool: deadpool_postgres::Pool,
 }
 
-#[tonic::async_trait]
+#[async_trait]
 impl Users for UsersService {
-    async fn test_user(&self, _request: Request<Empty>) -> Result<Response<User>, Status> {
-        log::info!("GET_ALL_USERS");
-        // println!("GetFeature = {:?}", request);
+    async fn get_users(
+        &self,
+        request: tonic::Request<GetUsersRequest>,
+    ) -> Result<tonic::Response<GetUsersResponse>, tonic::Status> {
+        log::info!("Got request from {:?}", request.remote_addr());
 
-        // for feature in &self.features[..] {
-        //     if feature.location.as_ref() == Some(request.get_ref()) {
-        //         return Ok(Response::new(feature.clone()));
-        //     }
-        // }
+        let request = request.into_inner();
+        log::debug!("Request {:?}", request);
 
-        Ok(Response::new(User { name: "Otávio".into() }))
+        let reply = GetUsersResponse {
+            metadata: Metadata {
+                total: 0,
+                r#where: request.r#where,
+            },
+            users: vec![],
+        };
+
+        Ok(tonic::Response::new(reply))
     }
 }
