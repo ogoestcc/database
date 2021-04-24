@@ -1,3 +1,4 @@
+use crate::database::Database;
 use async_trait::async_trait;
 
 mod users {
@@ -6,9 +7,8 @@ mod users {
 }
 
 pub use users::{
-    get_users_response::Metadata,
-    users_server::{Users, UsersServer},
-    GetUsersRequest, GetUsersResponse,
+    get_users_response::Metadata, users_server, users_server::UsersServer, GetUsersRequest,
+    GetUsersResponse, User,
 };
 
 pub struct UsersService {
@@ -16,7 +16,7 @@ pub struct UsersService {
 }
 
 #[async_trait]
-impl Users for UsersService {
+impl users_server::Users for UsersService {
     async fn get_users(
         &self,
         request: tonic::Request<GetUsersRequest>,
@@ -26,12 +26,28 @@ impl Users for UsersService {
         let request = request.into_inner();
         log::debug!("Request {:?}", request);
 
+        let csv = crate::database::csv::CSVDatabase;
+
+        let r#where = if let Some(filters) = &request.r#where {
+            crate::models::users::UserWhere {
+                id: filters.id,
+                active: filters.active,
+                email: filters.email.clone(),
+            }
+        } else {
+            Default::default()
+        };
+
+        let users = csv.users(r#where).await;
+
+        let users: Vec<User> = users.iter().map(From::from).collect();
+
         let reply = GetUsersResponse {
             metadata: Metadata {
-                total: 0,
+                total: users.len() as u64,
                 r#where: request.r#where,
             },
-            users: vec![],
+            users: users,
         };
 
         Ok(tonic::Response::new(reply))

@@ -3,6 +3,8 @@ use tonic::transport::Server;
 
 mod config;
 mod services;
+mod database;
+mod models;
 
 #[tokio::main]
 async fn main() {
