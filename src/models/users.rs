@@ -105,18 +105,6 @@ impl super::super::database::Wherable for UserWhere {
         } else {
             format!("")
         }
-
-        // if self.id.is_some() || self.active.is_some() || self.email.is_some() {
-        //     let mut initial = format!("WHERE ");
-
-        //     if self.id.is_some() {
-        //         initial = format!("{} id = ", initial)
-        //     }
-
-        //     format!("")
-        // } else {
-        //     "".into()
-        // }
     }
 }
 

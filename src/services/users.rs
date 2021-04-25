@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use crate::database::{self, Database};
 use async_trait::async_trait;
 
@@ -13,9 +14,9 @@ pub use users::{
 
 pub struct UsersService{
     #[cfg(feature="csv_db")]
-    pub db_connection: database::CSVDatabase,
+    pub db_connection: Arc<database::CSVDatabase>,
     #[cfg(not(feature="csv_db"))]
-    pub db_connection: database::PostgresDatabase,
+    pub db_connection: Arc<database::PostgresDatabase>,
 }
 
 

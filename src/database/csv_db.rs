@@ -3,7 +3,7 @@ use csv::Reader;
 use serde::Deserialize;
 
 use super::{
-    super::models::{self, users::UserWhere},
+    super::models::{self, alerts::AlertWhere, users::UserWhere},
     Database,
 };
 
@@ -15,6 +15,8 @@ impl CSVDatabase {
         file: &str,
         filter: &mut F,
     ) -> Vec<D> {
+        log::info!("Get users infos from {}", file);
+
         let mut rdr = Reader::from_path(file).unwrap();
         let iter = rdr.deserialize();
         let mut vec = vec![];
@@ -23,6 +25,8 @@ impl CSVDatabase {
                 if filter(&d) {
                     acc.push(d)
                 }
+            } else {
+                println!("{:?}", u.err());
             }
 
             acc
@@ -36,8 +40,6 @@ impl CSVDatabase {
 impl Database for CSVDatabase {
     type U = UserWhere;
     async fn users(&self, r#where: Self::U) -> Vec<models::Users> {
-        log::info!("Get users infos from ../.dataset/8Kratings100users500alerts/users.csv");
-
         let filters = r#where;
 
         let mut filter = |user: &models::Users| {
@@ -66,5 +68,29 @@ impl Database for CSVDatabase {
             r"../.dataset/8Kratings100users500alerts/users.csv",
             &mut filter,
         )
+    }
+
+    type A = AlertWhere;
+
+    async fn alerts(&self, r#where: Self::A) -> Vec<models::Alerts> {
+        let filters = r#where;
+
+        let mut filter = |alert: &models::Alerts| {
+            let id = if let Some(id) = filters.id.clone() {
+                alert.same_id(id)
+            } else {
+                true
+            };
+
+            let content = if let Some(content) = filters.content.clone() {
+                alert.has_content(content)
+            } else {
+                true
+            };
+
+            id && content
+        };
+
+        self.get_data::<models::Alerts, _>(r"../.dataset/alerts.csv", &mut filter)
     }
 }

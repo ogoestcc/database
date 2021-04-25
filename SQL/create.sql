@@ -26,16 +26,6 @@ CREATE TABLE contents (
     CONSTRAINT contents_pk PRIMARY KEY (id)
 );
 
-ALTER TABLE
-    contents
-ADD
-    provider varchar(50) NULL;
-
-ALTER TABLE
-    contents
-ADD
-    CONSTRAINT contents_fk_provider FOREIGN KEY (provider) REFERENCES contents(id);
-
 -- users_contents definition
 -- Drop table
 DROP TABLE IF EXISTS users_contents;
@@ -55,7 +45,7 @@ DROP TABLE IF EXISTS alerts;
 
 CREATE TABLE alerts (
     id varchar(20) NOT NULL,
-    cvs_score float4 NULL DEFAULT 0.0,
+    cvss_score float4 NULL DEFAULT 0.0,
     description text NOT NULL DEFAULT '' :: text,
     published_at timestamp(0) NOT NULL,
     updated_at timestamp(0) NOT NULL,
