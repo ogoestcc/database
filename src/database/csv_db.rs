@@ -34,13 +34,15 @@ impl CSVDatabase {
 
 #[async_trait]
 impl Database for CSVDatabase {
-    type UserWhere = UserWhere;
-    async fn users(&self, r#where: Self::UserWhere) -> Vec<models::Users> {
+    type U = UserWhere;
+    async fn users(&self, r#where: Self::U) -> Vec<models::Users> {
+        log::info!("Get users infos from ../.dataset/8Kratings100users500alerts/users.csv");
+
         let filters = r#where;
 
         let mut filter = |user: &models::Users| {
             let id = if let Some(id) = filters.id {
-                user.same_id(id)
+                user.same_id(id as i64)
             } else {
                 true
             };
@@ -60,11 +62,9 @@ impl Database for CSVDatabase {
             id && active && email
         };
 
-        let all_users = self.get_data::<models::Users, _>(
+        self.get_data::<models::Users, _>(
             r"../.dataset/8Kratings100users500alerts/users.csv",
             &mut filter,
-        );
-
-        all_users
+        )
     }
 }

@@ -1,3 +1,4 @@
+use services::users;
 use tokio_postgres::NoTls;
 use tonic::transport::Server;
 
@@ -12,11 +13,20 @@ async fn main() {
     dotenv::dotenv().ok();
     let config = config::Config::from_env().unwrap();
 
-    let user_service = services::users::UsersService {
+
+    #[cfg(feature="csv_db")]
+    let db_connection = database::CSVDatabase;
+
+    #[cfg(not(feature="csv_db"))]
+    let db_connection = database::PostgresDatabase {
         pg_pool: config.postgres.create_pool(NoTls).unwrap(),
     };
 
-    let user_service = services::users::UsersServer::new(user_service);
+    let user_service = users::UsersService {
+        db_connection
+    };
+
+    let user_service = users::UsersServer::new(user_service);
 
     let addr = format!("[::1]:{}", config.server.port);
     log::info!("Running gRPC Server at: {}", addr);

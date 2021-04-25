@@ -1,4 +1,4 @@
-use crate::database::Database;
+use crate::database::{self, Database};
 use async_trait::async_trait;
 
 mod users {
@@ -11,9 +11,13 @@ pub use users::{
     GetUsersResponse, User,
 };
 
-pub struct UsersService {
-    pub pg_pool: deadpool_postgres::Pool,
+pub struct UsersService{
+    #[cfg(feature="csv_db")]
+    pub db_connection: database::CSVDatabase,
+    #[cfg(not(feature="csv_db"))]
+    pub db_connection: database::PostgresDatabase,
 }
+
 
 #[async_trait]
 impl users_server::Users for UsersService {
@@ -26,8 +30,6 @@ impl users_server::Users for UsersService {
         let request = request.into_inner();
         log::debug!("Request {:?}", request);
 
-        let csv = crate::database::csv::CSVDatabase;
-
         let r#where = if let Some(filters) = &request.r#where {
             crate::models::users::UserWhere {
                 id: filters.id,
@@ -38,7 +40,7 @@ impl users_server::Users for UsersService {
             Default::default()
         };
 
-        let users = csv.users(r#where).await;
+        let users = self.db_connection.users(r#where).await;
 
         let users: Vec<User> = users.iter().map(From::from).collect();
 
