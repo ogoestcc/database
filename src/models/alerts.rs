@@ -3,7 +3,7 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use tokio_pg_mapper_derive::PostgresMapper;
 
-use crate::services::alerts::Alert;
+use crate::{services::alerts_mod::Alert, utils::parser::parse_date};
 
 fn default_date() -> NaiveDateTime {
     NaiveDateTime::from_timestamp(0, 42_000_000)
@@ -37,32 +37,6 @@ pub struct Alerts {
     updated_at: NaiveDateTime,
 }
 
-pub mod parse_date {
-
-    use chrono::{DateTime, NaiveDateTime};
-
-    use serde::{Deserialize, Deserializer, Serialize, Serializer};
-
-    pub fn serialize<S>(dt: &NaiveDateTime, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        dt.to_string().serialize(serializer)
-    }
-
-    pub fn deserialize<'de, D>(d: D) -> Result<NaiveDateTime, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let deserialized = String::deserialize(d)?;
-
-        let as_datetime = DateTime::parse_from_rfc3339(deserialized.as_str());
-        let default = DateTime::parse_from_rfc3339(r#"1970-01-01T00:00:00.042-00:00"#).unwrap();
-
-        Ok(as_datetime.unwrap_or(default).naive_utc())
-    }
-
-}
 
 impl Alerts {
     pub fn same_id(&self, id: String) -> bool {
@@ -93,7 +67,7 @@ impl super::super::database::Wherable for AlertWhere {
             if self.content.is_some() {
                 let content = self.content.clone().unwrap();
                 _where = format!(
-                    "{}{} (provider = '{}' OR product = '{}')",
+                    "{}{} (`provider` = '{}' OR `product` = '{}')",
                     _where,
                     if self.id.is_some() { " AND" } else { " " },
                     content,

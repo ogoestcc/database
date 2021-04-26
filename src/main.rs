@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use models::users::UserWhere;
 use services::{alerts, users};
 use tokio_postgres::NoTls;
 use tonic::transport::Server;
@@ -11,6 +10,7 @@ mod config;
 mod database;
 mod models;
 mod services;
+mod utils;
 
 #[tokio::main]
 async fn main() {
@@ -20,8 +20,6 @@ async fn main() {
 
     #[cfg(feature = "csv_db")]
     let db_connection = database::CSVDatabase;
-    #[cfg(feature = "csv_db")]
-    println!("{:?}", db_connection.alerts(Default::default()).await[0]);
 
     #[cfg(not(feature = "csv_db"))]
     let db_connection = database::PostgresDatabase {

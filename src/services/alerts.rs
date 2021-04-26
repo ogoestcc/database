@@ -1,18 +1,13 @@
-use std::sync::Arc;
 use async_trait::async_trait;
+use std::sync::Arc;
 
 use super::super::{database, Database};
 
-mod alerts {
-    // include!(concat!(std::env!("OUT_DIR"), "/users.rs"));
-    tonic::include_proto!("alerts");
-}
-
-pub use alerts::{
-    alerts_server::{self, AlertsServer},
-    get_alerts_response::Metadata,
-    Alert, GetAlertsRequest, GetAlertsResponse,
+use super::alerts_mod::{
+    alerts_server, get_alerts_response::Metadata, Alert, GetAlertsRequest, GetAlertsResponse,
 };
+
+pub use super::alerts_mod::alerts_server::AlertsServer;
 
 pub struct AlertsService {
     #[cfg(feature = "csv_db")]
@@ -35,7 +30,7 @@ impl alerts_server::Alerts for AlertsService {
         let r#where = if let Some(filters) = &request.r#where {
             crate::models::alerts::AlertWhere {
                 id: filters.id.clone(),
-                content: filters.content.clone(), 
+                content: filters.content.clone(),
             }
         } else {
             Default::default()
@@ -53,7 +48,7 @@ impl alerts_server::Alerts for AlertsService {
             alerts,
         };
 
-        log::info!("Alerrts filtered");
+        log::info!("Alerts filtered");
 
         Ok(tonic::Response::new(reply))
     }

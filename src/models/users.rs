@@ -17,7 +17,7 @@ fn default_date() -> NaiveDateTime {
 #[pg_mapper(table = "users")]
 pub struct Users {
     #[serde(rename = "user_id")]
-    id: i64,
+    pub id: i64,
     #[serde(default)]
     email: String,
     #[serde(default)]
@@ -44,6 +44,12 @@ impl Users {
         self.active
     }
 }
+
+pub struct UserRatings {
+    pub user: Users,
+    pub ratings: Vec<super::ratings::Ratings>,
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct UserWhere {
     pub id: Option<i32>,
@@ -73,13 +79,13 @@ impl super::super::database::Wherable for UserWhere {
                     apply_and = true;
                 }
 
-                _where = format!("{} id = {}", _where, id);
+                _where = format!("{} `id` = {}", _where, id);
             }
 
             if self.email.is_some() {
                 let email = self.email.clone().unwrap();
                 _where = format!(
-                    "{} {} email = '{}'",
+                    "{} {} `email` '{}'",
                     _where,
                     if apply_and { "AND" } else { "" },
                     email
@@ -94,7 +100,7 @@ impl super::super::database::Wherable for UserWhere {
                 let active = self.active.unwrap();
 
                 _where = format!(
-                    "{} {} active = {}",
+                    "{} {} `active` = {}",
                     _where,
                     if apply_and { "AND" } else { "" },
                     active

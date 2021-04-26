@@ -1,7 +1,7 @@
 pub use async_trait::async_trait;
 
 // use super::models::{alert::Alert, rating::Rating, user::User};
-use super::models::{Users, Alerts};
+use super::models::{Users, Alerts, users::UserRatings};
 
 pub trait Wherable {
     fn clause(&self) -> String;
@@ -17,7 +17,9 @@ pub use postgres_db::PostgresDatabase;
 pub trait Database {
     type U;
     type A;
+    type R;
     async fn users(&self, r#where: Self::U) -> Vec<Users>;
+    async fn users_ratings(&self, user_where: Self::U, rating_where: Self::R) -> Vec<UserRatings>;
     async fn alerts(&self, r#where: Self::A) -> Vec<Alerts>;
     // async fn get_ratings(&self) -> Vec<Rating>;
 }

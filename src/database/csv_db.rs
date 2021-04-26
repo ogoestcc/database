@@ -93,4 +93,10 @@ impl Database for CSVDatabase {
 
         self.get_data::<models::Alerts, _>(r"../.dataset/alerts.csv", &mut filter)
     }
+
+    type R = UserWhere;
+
+    async fn users_ratings(&self, user_where: Self::U, rating_where: Self::R) -> Vec<models::users::UserRatings> {
+        todo!()
+    }
 }
