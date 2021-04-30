@@ -24,3 +24,27 @@ pub mod parse_date {
     }
 
 }
+
+pub mod int_as_bool {
+
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    pub fn serialize<S>(dt: &bool, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let data = if *dt { 1u16 } else { 0u16};
+
+        data.to_string().serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D>(d: D) -> Result<bool, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let deserialized = u16::deserialize(d)?;
+
+        Ok(if deserialized == 0 { false } else { true })
+    }
+
+}

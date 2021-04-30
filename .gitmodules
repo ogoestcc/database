@@ -1,3 +1,6 @@
 [submodule "protos"]
 	path = protos
 	url = git@github.com:ogoestcc/proto.git
+[submodule "queler"]
+	path = queler
+	url = git@github.com:ogoes/queler.git

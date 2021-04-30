@@ -1,5 +1,6 @@
 
 use chrono::NaiveDateTime;
+use queler::clause::Clause;
 use serde::{Deserialize, Serialize};
 use tokio_pg_mapper_derive::PostgresMapper;
 
@@ -56,29 +57,54 @@ pub struct AlertWhere {
 }
 
 impl super::super::database::Wherable for AlertWhere {
-    fn clause(&self) -> String {
-        if self.id.is_some() || self.content.is_some() {
-            let mut _where = format!("WHERE");
-            if self.id.is_some() {
-                let id = self.id.clone().unwrap();
-                _where = format!("{} id = '{}'", _where, id);
-            }
+    fn clause(&self) -> Clause {
 
-            if self.content.is_some() {
-                let content = self.content.clone().unwrap();
-                _where = format!(
-                    "{}{} (`provider` = '{}' OR `product` = '{}')",
-                    _where,
-                    if self.id.is_some() { " AND" } else { " " },
-                    content,
-                    content,
-                );
-            }
 
-            _where
+        let id = if self.id.is_some() {
+            let id = self.id.clone().unwrap();
+            queler::clause!{ id }
         } else {
-            format!("")
+            queler::clause!{ }
+        };
+
+        let content = if self.content.is_some() {
+            let content = self.content.clone().unwrap();
+            queler::or_clause!{ "provider" => &content, "product" => &content }
+        } else {
+            queler::clause!{ }
+        };
+
+        if self.id.is_some() || self.content.is_some() {
+            queler::clause!{ id, content }
+        } else {
+            queler::clause!{ }
         }
+
+        // if self.id.is_some() || self.content.is_some() {
+
+        //     let a = queler::or_clause!{ "id" => self.id };
+
+        //     let mut _where = format!("WHERE");
+        //     if self.id.is_some() {
+        //         let id = self.id.clone().unwrap();
+        //         _where = format!("{} id = '{}'", _where, id);
+        //     }
+
+        //     if self.content.is_some() {
+        //         let content = self.content.clone().unwrap();
+        //         _where = format!(
+        //             "{}{} (provider = '{}' OR product = '{}')",
+        //             _where,
+        //             if self.id.is_some() { " AND" } else { " " },
+        //             content,
+        //             content,
+        //         );
+        //     }
+
+        //     _where
+        // } else {
+        //     format!("")
+        // }
     }
 }
 

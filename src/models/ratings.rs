@@ -1,11 +1,12 @@
-use std::any::Any;
-
 use chrono::NaiveDateTime;
-use database::Wherable;
+use queler::clause::Clause;
 use serde::{Deserialize, Serialize};
 use tokio_pg_mapper_derive::PostgresMapper;
 
-use crate::{services::ratings_mod::Rating, utils::parser::parse_date};
+use crate::{
+    services::ratings_mod::Rating,
+    utils::parser::{int_as_bool, parse_date},
+};
 
 use super::super::database;
 
@@ -18,14 +19,14 @@ fn default_date() -> NaiveDateTime {
 #[pg_mapper(table = "ratings")]
 pub struct Ratings {
     #[serde(rename = "userid")]
-    user_id: i64,
+    pub user_id: i64,
     #[serde(rename = "cveid")]
     alert_id: String,
-    #[serde(default)]
+    #[serde(default, with = "int_as_bool")]
     like: bool,
-    #[serde(default)]
+    #[serde(default, with = "int_as_bool")]
     dislike: bool,
-    #[serde(default)]
+    #[serde(default, with = "int_as_bool")]
     critical: bool,
     #[serde(default = "default_date", with = "parse_date")]
     created_at: NaiveDateTime,
@@ -41,83 +42,120 @@ pub struct RatingWhere {
 }
 
 impl database::Wherable for RatingWhere {
-    fn clause(&self) -> String {
-        let filters = &[
-            self.user_id.is_some(),
-            self.alert_id.is_some(),
-            self.like.is_some(),
-            self.dislike.is_some(),
-            self.critical.is_some(),
-        ];
+    fn clause(&self) -> Clause {
+        // let filters = &[
+        //     self.user_id.is_some(),
+        //     self.alert_id.is_some(),
+        //     self.like.is_some(),
+        //     self.dislike.is_some(),
+        //     self.critical.is_some(),
+        // ];
 
-        let filter_count = filters
-            .iter()
-            .fold(0u16, |has, f| if *f { has + 1 } else { has });
+        // let filter_count = filters
+        //     .iter()
+        //     .fold(0u16, |has, f| if *f { has + 1 } else { has });
 
-        if filter_count > 0 {
-            let mut _where = format!("");
-            let mut apply_and = false;
-
-            if self.user_id.is_some() {
-                _where = format!("{} user_id = {}", _where, self.user_id.clone().unwrap());
-
-                if filter_count > 1 {
-                    apply_and = true;
-                }
-            }
-
-            if self.alert_id.is_some() {
-                _where = format!(
-                    "{}{} alert_id = '{}'",
-                    _where,
-                    if apply_and { "AND" } else { "" },
-                    self.alert_id.clone().unwrap()
-                );
-
-                if !apply_and && filter_count > 1 {
-                    apply_and = true;
-                }
-            }
-
-            if self.like.is_some() {
-                _where = format!(
-                    "{} {} rat.like = {}",
-                    _where,
-                    if apply_and { "AND" } else { "" },
-                    self.like.unwrap()
-                );
-
-                if !apply_and && filter_count > 1 {
-                    apply_and = true;
-                }
-            }
-
-            if self.dislike.is_some() {
-                _where = format!(
-                    "{} {} dislike = {}",
-                    _where,
-                    if apply_and { "AND" } else { "" },
-                    self.dislike.unwrap()
-                );
-
-                if !apply_and && filter_count > 1 {
-                    apply_and = true;
-                }
-            }
-
-            if self.critical.is_some() {
-                _where = format!(
-                    "{} {} critical = {}",
-                    _where,
-                    if apply_and { "AND" } else { "" },
-                    self.critical.unwrap()
-                );
-            }
-
-            _where
+        let user_id = if self.user_id.is_some() {
+            let user_id = self.user_id.clone().unwrap();
+            queler::clause! { user_id }
         } else {
-            format!("")
-        }
+            queler::clause! {}
+        };
+
+        let alert_id = if self.alert_id.is_some() {
+            let alert_id = self.alert_id.clone().unwrap();
+            queler::clause! { alert_id }
+        } else {
+            queler::clause! {}
+        };
+
+        let like = if self.like.is_some() {
+            let like = self.like.unwrap();
+            queler::clause! { "\"like\"" => like }
+        } else {
+            queler::clause! {}
+        };
+
+        let dislike = if self.dislike.is_some() {
+            let dislike = self.dislike.unwrap();
+            queler::clause! { dislike }
+        } else {
+            queler::clause! {}
+        };
+
+        let critical = if self.critical.is_some() {
+            let critical = self.critical.unwrap();
+            queler::clause! { critical }
+        } else {
+            queler::clause! {}
+        };
+
+        queler::clause! { user_id, alert_id, like, dislike, critical }
+
+        // if filter_count > 0 {
+        //     let mut _where = format!("");
+        //     let mut apply_and = false;
+
+        //     if self.user_id.is_some() {
+        //         _where = format!("{} user_id = {}", _where, self.user_id.clone().unwrap());
+
+        //         if filter_count > 1 {
+        //             apply_and = true;
+        //         }
+        //     }
+
+        //     if self.alert_id.is_some() {
+        //         _where = format!(
+        //             "{}{} alert_id = '{}'",
+        //             _where,
+        //             if apply_and { "AND" } else { "" },
+        //             self.alert_id.clone().unwrap()
+        //         );
+
+        //         if !apply_and && filter_count > 1 {
+        //             apply_and = true;
+        //         }
+        //     }
+
+        //     if self.like.is_some() {
+        //         _where = format!(
+        //             "{} {} rat.like = {}",
+        //             _where,
+        //             if apply_and { "AND" } else { "" },
+        //             self.like.unwrap()
+        //         );
+
+        //         if !apply_and && filter_count > 1 {
+        //             apply_and = true;
+        //         }
+        //     }
+
+        //     if self.dislike.is_some() {
+        //         _where = format!(
+        //             "{} {} dislike = {}",
+        //             _where,
+        //             if apply_and { "AND" } else { "" },
+        //             self.dislike.unwrap()
+        //         );
+
+        //         if !apply_and && filter_count > 1 {
+        //             apply_and = true;
+        //         }
+        //     }
+
+        //     if self.critical.is_some() {
+        //         _where = format!(
+        //             "{} {} critical = {}",
+        //             _where,
+        //             if apply_and { "AND" } else { "" },
+        //             self.critical.unwrap()
+        //         );
+        //     }
+
+        //     _where
+        // } else {
+        //     format!("")
+        // }
     }
 }
 

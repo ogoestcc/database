@@ -4,7 +4,7 @@ pub use async_trait::async_trait;
 use super::models::{Users, Alerts, users::UserRatings};
 
 pub trait Wherable {
-    fn clause(&self) -> String;
+    fn clause(&self) -> queler::clause::Clause;
 }
 
 mod csv_db;

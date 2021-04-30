@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use services::{alerts, users};
+#[cfg(not(feature = "csv_db"))]
 use tokio_postgres::NoTls;
 use tonic::transport::Server;
 

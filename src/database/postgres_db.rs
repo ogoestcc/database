@@ -22,11 +22,14 @@ impl Database for PostgresDatabase {
     async fn users(&self, r#where: Self::U) -> Vec<Users> {
         let client = self.pg_pool.get().await.unwrap();
 
-        let stat = format!("SELECT * FROM users WHERE {}", r#where.clause());
+        let select = queler::select::SelectBuilder::new()
+            .from("users")
+            .r#where(r#where.clause())
+            .build();
 
-        let statement = client.prepare(stat.as_str()).await.unwrap();
+        log::debug!("{}", select);
 
-        log::debug!("Statment: {}", stat);
+        let statement = client.prepare(select.to_string().as_str()).await.unwrap();
 
         client
             .query(&statement, &[])
@@ -42,11 +45,14 @@ impl Database for PostgresDatabase {
     async fn alerts(&self, r#where: Self::A) -> Vec<Alerts> {
         let client = self.pg_pool.get().await.unwrap();
 
-        let stat = format!("SELECT * FROM alerts WHERE {}", r#where.clause());
+        let select = queler::select::SelectBuilder::new()
+            .from("alerts")
+            .r#where(r#where.clause())
+            .build();
 
-        let statement = client.prepare(stat.as_str()).await.unwrap();
+        log::debug!("{}", select);
 
-        log::debug!("Statment: {}", stat);
+        let statement = client.prepare(select.to_string().as_str()).await.unwrap();
 
         client
             .query(&statement, &[])
@@ -67,25 +73,19 @@ impl Database for PostgresDatabase {
         let client = self.pg_pool.get().await.unwrap();
 
         let rating_where = RatingWhere {
-            user_id: Some(format!(r#"usr.id"#)),
+            user_id: Some(format!(r#":usr.id"#)),
             ..rating_where
         };
 
-        let stat = format!(
-            "SELECT
-                usr.*,
-                rat.*
-            FROM users AS usr
-            INNER JOIN ratings AS rat
-                ON {}
-            {}",
-            rating_where.clause(),
-            user_where.clause()
-        );
+        let select = queler::select::SelectBuilder::new()
+            .from(("users", "usr"))
+            .inner_join(("ratings", "rat"), rating_where.clause())
+            .r#where(user_where.clause())
+            .build();
 
-        log::debug!("Statment: {}", stat);
-        let statement = client.prepare(stat.as_str()).await.unwrap();
+        log::debug!("{}", select);
 
+        let statement = client.prepare(select.to_string().as_str()).await.unwrap();
 
         let mut hash = HashMap::<i64, UserRatings>::new();
 
