@@ -6,13 +6,13 @@ use crate::{
 };
 
 #[derive(Debug, Clone, Default)]
-pub struct Users {
+pub struct User {
     pub id: Option<i32>,
     pub email: Option<String>,
     pub active: Option<bool>,
 }
 
-impl Wherable for Users {
+impl Wherable for User {
     fn clause(&self) -> Clause {
         let id = if self.id.is_some() {
             let id = self.id.unwrap();
@@ -39,7 +39,7 @@ impl Wherable for Users {
     }
 }
 
-impl Filter<models::Users> for Users {
+impl Filter<models::Users> for User {
     fn filter(&self, user: &models::Users) -> bool {
         let id = if let Some(id) = self.id {
             user.same_id(id as i64)

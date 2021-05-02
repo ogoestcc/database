@@ -8,9 +8,9 @@ use crate::{
 use queler::clause::Clause;
 
 #[derive(Debug, Clone, Default)]
-pub struct UsersRatings(User, Rating);
+pub struct UserRatings(User, Rating);
 
-impl Wherable for UsersRatings {
+impl Wherable for UserRatings {
     fn clause(&self) -> Clause {
         let user = self.0.clause();
         let rating = self.1.clause();
@@ -19,43 +19,43 @@ impl Wherable for UsersRatings {
     }
 }
 
-impl From<Rating> for UsersRatings {
+impl From<Rating> for UserRatings {
     fn from(w: Rating) -> Self {
         (User::default(), w).into()
     }
 }
 
-impl From<User> for UsersRatings {
+impl From<User> for UserRatings {
     fn from(w: User) -> Self {
         (w, Rating::default()).into()
     }
 }
 
-impl<U: Into<User>, R: Into<Rating>> From<(U, R)> for UsersRatings {
+impl<U: Into<User>, R: Into<Rating>> From<(U, R)> for UserRatings {
     fn from((uw, rw): (U, R)) -> Self {
         Self(uw.into(), rw.into())
     }
 }
 
-impl<B: Into<UsersRatings> + Clone> From<&B> for UsersRatings {
+impl<B: Into<UserRatings> + Clone> From<&B> for UserRatings {
     fn from(item: &B) -> Self {
         item.clone().into()
     }
 }
 
-impl Filter<models::Users> for UsersRatings {
+impl Filter<models::Users> for UserRatings {
     fn filter(&self, user: &models::Users) -> bool {
         self.0.filter(user)
     }
 }
 
-impl Filter<models::Ratings> for UsersRatings {
+impl Filter<models::Ratings> for UserRatings {
     fn filter(&self, rating: &models::Ratings) -> bool {
         self.1.filter(rating)
     }
 }
 
-impl Filter<models::UserRatings> for UsersRatings {
+impl Filter<models::UserRatings> for UserRatings {
     fn filter(&self, user_rating: &models::UserRatings) -> bool {
         let valid_user = self.0.filter(&user_rating.user);
 

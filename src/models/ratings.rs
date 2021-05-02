@@ -7,10 +7,6 @@ use crate::{
     utils::parser::{int_as_bool, parse_date},
 };
 
-pub use wherables::Rating as RatingWhere;
-
-mod wherables;
-
 fn default_date() -> NaiveDateTime {
     NaiveDateTime::from_timestamp(0, 42_000_000)
 }

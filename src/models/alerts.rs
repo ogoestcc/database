@@ -1,13 +1,9 @@
-mod wherables;
-
-pub use wherables::Alert as AlertWhere;
-
 use chrono::NaiveDateTime;
 
 use serde::{Deserialize, Serialize};
 use tokio_pg_mapper_derive::PostgresMapper;
 
-use crate::{services::alerts_mod::Alert, utils::parser::parse_date};
+use crate::{services::types::alerts as alert_service, utils::parser::parse_date};
 
 fn default_date() -> NaiveDateTime {
     NaiveDateTime::from_timestamp(0, 42_000_000)
@@ -51,9 +47,9 @@ impl Alerts {
     }
 }
 
-impl From<&Alerts> for Alert {
+impl From<&Alerts> for alert_service::Alert {
     fn from(alert: &Alerts) -> Self {
-        Alert {
+        alert_service::Alert {
             id: alert.id.clone(),
             cvss_score: Some(alert.cvss_score),
             provider: alert.provider.clone(),

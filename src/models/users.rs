@@ -1,11 +1,8 @@
 use chrono::NaiveDateTime;
-use queler::clause::Clause;
 use serde::{Deserialize, Serialize};
 use tokio_pg_mapper_derive::PostgresMapper;
 
-pub mod wherables;
-
-use crate::services::types::users as user_service;
+use crate::{models, services::types::users as user_service};
 
 fn default_active() -> bool {
     true
@@ -65,43 +62,7 @@ impl Default for Users {
 #[derive(Debug, Clone)]
 pub struct UserRatings {
     pub user: Users,
-    pub ratings: Vec<super::ratings::Ratings>,
-}
-
-
-
-#[derive(Debug, Clone, Default)]
-pub struct UserWhere {
-    pub id: Option<i32>,
-    pub email: Option<String>,
-    pub active: Option<bool>,
-}
-
-impl super::super::database::Wherable for UserWhere {
-    fn clause(&self) -> Clause {
-        let id = if self.id.is_some() {
-            let id = self.id.unwrap();
-            queler::clause! { id }
-        } else {
-            queler::clause! {}
-        };
-
-        let active = if self.active.is_some() {
-            let active = self.active.unwrap();
-            queler::clause! { active }
-        } else {
-            queler::clause! {}
-        };
-
-        let email = if self.email.is_some() {
-            let email = self.email.clone().unwrap();
-            queler::clause! { email }
-        } else {
-            queler::clause! {}
-        };
-
-        queler::clause!{ id, active, email }
-    }
+    pub ratings: Vec<models::Ratings>,
 }
 
 impl From<&Users> for user_service::User {
