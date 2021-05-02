@@ -2,7 +2,7 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use tokio_pg_mapper_derive::PostgresMapper;
 
-use crate::{models, services::types::users as user_service};
+use crate::{models, services::types::users as user_service, utils::parser::preferences};
 
 fn default_active() -> bool {
     true
@@ -65,16 +65,25 @@ pub struct UserRatings {
     pub ratings: Vec<models::Ratings>,
 }
 
-impl From<&Users> for user_service::User {
-    fn from(usr: &Users) -> Self {
-        Self {
-            id: usr.id as i32,
-            email: usr.email.clone(),
-            password: Some(usr.password.clone()),
-            active: usr.active,
-            created_at: usr.created_at.to_string(),
-            updated_at: usr.updated_at.to_string(),
-            deleted_at: if let Some(deleted) = usr.deleted_at.clone() {
+#[derive(Debug, Deserialize, Clone)]
+pub struct UserContents {
+    #[serde(flatten)]
+    pub user: Users,
+    #[serde(with = "preferences")]
+    pub preferences: Vec<models::Contents>,
+}
+
+
+impl Into<user_service::User> for Users {
+    fn into(self) -> user_service::User {
+        user_service::User {
+            id: self.id as i32,
+            email: self.email.clone(),
+            password: Some(self.password.clone()),
+            active: self.active,
+            created_at: self.created_at.to_string(),
+            updated_at: self.updated_at.to_string(),
+            deleted_at: if let Some(deleted) = self.deleted_at.clone() {
                 Some(deleted.to_string())
             } else {
                 None

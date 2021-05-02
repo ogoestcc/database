@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use tokio_pg_mapper_derive::PostgresMapper;
 
 use crate::{
-    services::ratings_mod::Rating,
+    services::types::ratings::Rating,
     utils::parser::{int_as_bool, parse_date},
 };
 
@@ -29,15 +29,15 @@ pub struct Ratings {
     created_at: NaiveDateTime,
 }
 
-impl From<&Ratings> for Rating {
-    fn from(rat: &Ratings) -> Self {
+impl Into<Rating> for Ratings {
+    fn into(self) -> Rating {
         Rating {
-            user_id: rat.user_id as i32,
-            alert_id: rat.alert_id.clone(),
-            like: rat.like,
-            dislike: rat.dislike,
-            critical: rat.critical,
-            created_at: rat.created_at.to_string(),
+            user_id: self.user_id as i32,
+            alert_id: self.alert_id.clone(),
+            like: self.like,
+            dislike: self.dislike,
+            critical: self.critical,
+            created_at: self.created_at.to_string(),
         }
     }
 }

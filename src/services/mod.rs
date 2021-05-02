@@ -10,16 +10,6 @@ mod database {
     tonic::include_proto!("database");
 }
 
-pub mod alerts_mod {
-    pub use super::database::{get_alerts_response, GetAlertsRequest, GetAlertsResponse};
-
-    pub use super::database::{alerts_server, Alert, AlertWhereClause};
-}
-
-pub mod ratings_mod {
-    pub use super::database::Rating;
-}
-
 pub mod types {
 
     use super::{database, handlers};
@@ -57,8 +47,8 @@ pub mod types {
             use super::{database, handlers::users};
 
             pub use database::{
-                get_users_and_contents_response::Metadata, GetUsersRequest as Request,
-                GetUsersAndContentsResponse as Response, UsersContents,
+                get_users_and_contents_response::Metadata, GetUsersAndContentsResponse as Response,
+                GetUsersRequest as Request, UsersContents,
             };
 
             pub use users::contents as handler;
@@ -67,6 +57,18 @@ pub mod types {
 
             pub type GetInput = tonic::Request<super::Request>;
             pub type GetOutput = Result<tonic::Response<Response>, tonic::Status>;
+
+            impl<T: Into<UsersContents> + Clone> From<&T> for UsersContents {
+            fn from(base: &T) -> Self {
+                base.clone().into()
+            }
+        }
+        }
+
+        impl<T: Into<User> + Clone> From<&T> for User {
+            fn from(base: &T) -> Self {
+                base.clone().into()
+            }
         }
     }
 
@@ -83,20 +85,55 @@ pub mod types {
 
         pub type GetInput = tonic::Request<Request>;
         pub type GetOutput = Result<tonic::Response<Response>, tonic::Status>;
+        
     }
 
-    pub mod ratings {}
+    pub mod ratings {
+        use super::database;
+
+        pub use database::{Rating, RatingWhereClause as WhereClause};
+
+        impl<T: Into<Rating> + Clone> From<&T> for Rating {
+            fn from(base: &T) -> Self {
+                base.clone().into()
+            }
+        }
+    }
+
+    pub mod contents {
+        use super::database;
+
+        pub use database::Content;
+
+        impl<T: Into<Content> + Clone> From<&T> for Content {
+            fn from(base: &T) -> Self {
+                base.clone().into()
+            }
+        }
+    }
 }
 
 mod traits {
     use crate::{database::Database, models};
 
-    pub trait Users: Database<models::Users> + Database<models::UserRatings> + Send + Sync
+    pub trait Users:
+        Database<models::Users>
+        + Database<models::UserRatings>
+        + Database<models::UserContents>
+        + Send
+        + Sync
     where
         Self: std::marker::Sized,
     {
     }
-    impl<T> Users for T where T: Database<models::Users> + Database<models::UserRatings> + Send + Sync {}
+    impl<T> Users for T where
+        T: Database<models::Users>
+            + Database<models::UserRatings>
+            + Database<models::UserContents>
+            + Send
+            + Sync
+    {
+    }
 
     pub trait Alerts: Database<models::Users> + Database<models::Alerts> + Send + Sync
     where

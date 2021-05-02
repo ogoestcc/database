@@ -7,6 +7,7 @@ use crate::{
 };
 
 mod ratings;
+mod contents;
 
 #[async_trait]
 impl Database<models::Users> for CSVDatabase {

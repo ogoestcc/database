@@ -62,3 +62,11 @@ impl Filter<models::Users> for User {
         id && active && email
     }
 }
+
+
+impl Filter<models::UserContents> for User {
+    fn filter(&self, user_content: &models::UserContents) -> bool {
+        self.filter(&user_content.user)
+    }
+}
+

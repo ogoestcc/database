@@ -1,19 +1,11 @@
 pub mod alerts;
+pub mod contents;
 pub mod ratings;
 pub mod users;
 
 pub use alerts::Alerts;
+pub use contents::Contents;
 pub use ratings::Ratings;
-pub use users::Users;
-pub use users::UserRatings;
+pub use users::{UserContents, UserRatings, Users};
 
 pub mod wherables;
-
-// pub mod wherables {
-
-//     pub use super::{
-//         alerts::AlertWhere as Alert,
-//         ratings::RatingWhere as Rating,
-//         users::wherables::{UserRatings, UserWhere as User},
-//     };
-// }

@@ -48,3 +48,19 @@ pub mod int_as_bool {
     }
 
 }
+
+pub mod preferences {
+    use serde::{Deserialize, Deserializer};
+
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<crate::models::Contents>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(String::deserialize(deserializer)?
+            .replace(&['[', ']', '\'', ' '][..], "")
+            .split(',')
+            .map(|s| s.into())
+            .collect())
+    }
+}

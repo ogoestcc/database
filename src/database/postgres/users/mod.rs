@@ -1,5 +1,6 @@
 
 mod ratings;
+mod contents;
 
 use super::{Database, PostgresDatabase};
 use tokio_pg_mapper::FromTokioPostgresRow;

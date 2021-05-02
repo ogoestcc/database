@@ -6,8 +6,6 @@ use crate::services::{
     types::alerts::{self, server},
 };
 
-pub use super::alerts_mod::alerts_server::AlertsServer;
-
 pub struct AlertsService<DB>
 where
     DB: traits::Alerts,
