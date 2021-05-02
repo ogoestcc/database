@@ -6,7 +6,7 @@ use tokio_pg_mapper::FromTokioPostgresRow;
 use crate::{
     database::Wherable,
     models::{
-        ratings::RatingWhere,
+        wherables,
         users::UserRatings,
         Ratings, Users,
     },
@@ -21,7 +21,7 @@ impl Database<UserRatings> for PostgresDatabase {
     {
         let client = self.0.get().await.unwrap();
 
-        let rating_where = RatingWhere {
+        let rating_where = wherables::Rating {
             user_id: Some(r#":usr.id"#.to_string()),
             ..Default::default()
         };

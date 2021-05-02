@@ -5,6 +5,9 @@ use crate::{
     services::{traits, types::users as service},
 };
 
+pub mod ratings;
+pub mod contents;
+
 pub async fn get<DB: traits::Users>(
     db_connection: Arc<DB>,
     request: service::Request,
