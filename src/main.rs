@@ -1,11 +1,10 @@
 use std::sync::Arc;
 
-use services::{alerts, users};
-#[cfg(not(feature = "csv_db"))]
+#[cfg(not(feature = "csv"))]
 use tokio_postgres::NoTls;
 use tonic::transport::Server;
 
-use database::Database;
+use services::types::{alerts::server as alerts_server, users::server as user_server};
 
 mod config;
 mod database;
@@ -19,22 +18,24 @@ async fn main() {
     dotenv::dotenv().ok();
     let config = config::Config::from_env().unwrap();
 
-    #[cfg(feature = "csv_db")]
+    #[cfg(feature = "csv")]
     let db_connection = database::CSVDatabase;
 
-    #[cfg(not(feature = "csv_db"))]
+    #[cfg(not(feature = "csv"))]
     let db_connection = database::PostgresDatabase {
         pg_pool: config.postgres.create_pool(NoTls).unwrap(),
     };
+
     let db_connection = Arc::new(db_connection);
 
-    let db_1 = db_connection.clone();
-    let user_service = users::UsersService { db_connection };
-    let alert_service = services::AlertsService { db_connection: db_1 };
+    let db_clone = db_connection.clone();
+    let user_service = services::UsersService { db_connection };
+    let alert_service = services::AlertsService {
+        db_connection: db_clone,
+    };
 
-    let user_service = users::UsersServer::new(user_service);
-    let alert_service = alerts::AlertsServer::new(alert_service);
-
+    let user_service = user_server::UsersServer::new(user_service);
+    let alert_service = alerts_server::AlertsServer::new(alert_service);
 
     let addr = format!("[::1]:{}", config.server.port);
     log::info!("Running gRPC Server at: {}", addr);

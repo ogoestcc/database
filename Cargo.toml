@@ -10,8 +10,8 @@ edition = "2018"
 async-trait = "0.1.50"
 chrono = { version = "0.4.19", features = ["serde"] }
 config = "0.11.0"
-csv = "1.1.6"
-deadpool-postgres = "0.7.0"
+csv_lib = { version = "1.1.6", optional = true, package = "csv" }
+deadpool-postgres = { version = "0.7.0" }
 dotenv = "0.15.0"
 env_logger = "0.8.3"
 log = "0.4.14"
@@ -19,14 +19,13 @@ prost = "0.7.0"
 queler = { path = "queler" }
 serde = "1.0.125"
 tokio = { version = "1.5.0", features = ["full"] }
-tokio-pg-mapper = "0.2.0"
-tokio-pg-mapper-derive = "0.2.0"
+tokio-pg-mapper = { version = "0.2.0" }
+tokio-pg-mapper-derive = { version = "0.2.0" }
 tokio-postgres = { version = "0.7.1", features = ["with-chrono-0_4"] }
 tonic = "0.4.2"
 
 [build-dependencies]
 tonic-build = "0.4.2"
 
-
 [features]
-csv_db = []
+csv = ["csv_lib"]
