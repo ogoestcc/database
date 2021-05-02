@@ -15,7 +15,7 @@ impl Database<Users> for PostgresDatabase {
     where
         W: Wherable + Send + Sync,
     {
-        let client = self.pg_pool.get().await.unwrap();
+        let client = self.0.get().await.unwrap();
 
         let select = queler::select::SelectBuilder::new()
             .select(&Users::sql_fields().split(r#", "#).collect::<Vec<&str>>())

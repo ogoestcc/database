@@ -6,7 +6,7 @@ use crate::models::Alerts;
 #[async_trait::async_trait]
 impl Database<Alerts> for PostgresDatabase {
     async fn get<W>(&self, r#where: W) -> Vec<Alerts> where W: crate::database::Wherable + Send + Sync {
-        let client = self.pg_pool.get().await.unwrap();
+        let client = self.0.get().await.unwrap();
 
         let select = queler::select::SelectBuilder::new()
             .from("alerts")

@@ -19,7 +19,7 @@ impl Database<UserRatings> for PostgresDatabase {
     where
         W: Wherable + Send + Sync,
     {
-        let client = self.pg_pool.get().await.unwrap();
+        let client = self.0.get().await.unwrap();
 
         let rating_where = RatingWhere {
             user_id: Some(r#":usr.id"#.to_string()),

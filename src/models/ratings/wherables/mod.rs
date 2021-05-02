@@ -54,7 +54,7 @@ impl database::Wherable for Rating {
 }
 
 impl database::Filter<models::Ratings> for Rating {
-    fn filter(&self, rating: &models::Ratings) -> bool {
+    fn filter(&self, _: &models::Ratings) -> bool {
         false
     }
 }

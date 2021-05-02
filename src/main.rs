@@ -1,7 +1,5 @@
 use std::sync::Arc;
 
-#[cfg(not(feature = "csv"))]
-use tokio_postgres::NoTls;
 use tonic::transport::Server;
 
 use services::types::{alerts::server as alerts_server, users::server as user_server};
@@ -22,9 +20,7 @@ async fn main() {
     let db_connection = database::CSVDatabase;
 
     #[cfg(not(feature = "csv"))]
-    let db_connection = database::PostgresDatabase {
-        pg_pool: config.postgres.create_pool(NoTls).unwrap(),
-    };
+    let db_connection = database::PostgresDatabase(config.postgres.create_pool(tokio_postgres::NoTls).unwrap());
 
     let db_connection = Arc::new(db_connection);
 
