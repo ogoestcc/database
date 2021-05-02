@@ -59,10 +59,10 @@ pub mod types {
             pub type GetOutput = Result<tonic::Response<Response>, tonic::Status>;
 
             impl<T: Into<UsersContents> + Clone> From<&T> for UsersContents {
-            fn from(base: &T) -> Self {
-                base.clone().into()
+                fn from(base: &T) -> Self {
+                    base.clone().into()
+                }
             }
-        }
         }
 
         impl<T: Into<User> + Clone> From<&T> for User {
@@ -85,7 +85,22 @@ pub mod types {
 
         pub type GetInput = tonic::Request<Request>;
         pub type GetOutput = Result<tonic::Response<Response>, tonic::Status>;
-        
+
+        pub mod ratings {
+            use super::{database, handlers::alerts};
+
+            pub use database::{
+                get_alerts_and_ratings_response::Metadata, AlertsRatings,
+                GetAlertsAndRatingsRequest as Request, GetAlertsAndRatingsResponse as Response,
+            };
+
+            pub use alerts::ratings as handler;
+
+            pub use database::RatingWhereClause as WhereClause;
+
+            pub type GetInput = tonic::Request<Request>;
+            pub type GetOutput = Result<tonic::Response<Response>, tonic::Status>;
+        }
     }
 
     pub mod ratings {
@@ -135,10 +150,12 @@ mod traits {
     {
     }
 
-    pub trait Alerts: Database<models::Users> + Database<models::Alerts> + Send + Sync
+    pub trait Alerts:
+        Database<models::Alerts> + Database<models::AlertRatings> + Send + Sync
     where
         Self: std::marker::Sized,
     {
     }
-    impl<T> Alerts for T where T: Database<models::Users> + Database<models::Alerts> + Send + Sync {}
+    impl<T> Alerts for T where T: Database<models::Alerts> + Database<models::AlertRatings> + Send + Sync
+    {}
 }

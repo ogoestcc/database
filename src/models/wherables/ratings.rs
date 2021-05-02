@@ -1,5 +1,5 @@
+use crate::{database, models, services::types::ratings::WhereClause};
 use queler::clause::Clause;
-use crate::{database, models};
 
 #[derive(Debug, Clone, Default)]
 pub struct Rating {
@@ -10,10 +10,8 @@ pub struct Rating {
     pub critical: Option<bool>,
 }
 
-
 impl database::Wherable for Rating {
     fn clause(&self) -> Clause {
-
         let user_id = if self.user_id.is_some() {
             let user_id = self.user_id.clone().unwrap();
             queler::clause! { user_id }
@@ -50,6 +48,22 @@ impl database::Wherable for Rating {
         };
 
         queler::clause! { user_id, alert_id, like, dislike, critical }
+    }
+}
+
+impl From<WhereClause> for Rating {
+    fn from(w: WhereClause) -> Self {
+        Rating {
+            user_id: if let Some(id) = w.user_id {
+                Some(id.to_string())
+            } else {
+                None
+            },
+            alert_id: w.alert_id,
+            like: w.like,
+            dislike: w.dislike,
+            critical: w.critical,
+        }
     }
 }
 

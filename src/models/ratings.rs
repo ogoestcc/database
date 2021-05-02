@@ -17,7 +17,7 @@ fn default_date() -> NaiveDateTime {
 pub struct Ratings {
     #[serde(rename = "userid")]
     pub user_id: i64,
-    #[serde(rename = "cveid")]
+    #[serde(default, rename = "cveid")]
     alert_id: String,
     #[serde(default, with = "int_as_bool")]
     like: bool,

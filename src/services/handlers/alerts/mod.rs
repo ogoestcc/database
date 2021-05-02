@@ -5,6 +5,8 @@ use crate::{
     services::{traits, types::alerts as service},
 };
 
+pub mod ratings;
+
 pub async fn get<DB: traits::Alerts>(
     db_connection: Arc<DB>,
     request: service::Request,

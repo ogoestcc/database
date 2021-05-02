@@ -3,6 +3,8 @@ use tokio_pg_mapper::FromTokioPostgresRow;
 
 use crate::models::Alerts;
 
+mod ratings;
+
 #[async_trait::async_trait]
 impl Database<Alerts> for PostgresDatabase {
     async fn get<W>(&self, r#where: W) -> Vec<Alerts> where W: crate::database::Wherable + Send + Sync {

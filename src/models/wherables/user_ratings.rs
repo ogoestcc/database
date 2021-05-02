@@ -4,6 +4,7 @@ use crate::{
         self,
         wherables::{Rating, User},
     },
+    services::types::ratings::WhereClause,
 };
 use queler::clause::Clause;
 
@@ -28,6 +29,13 @@ impl From<Rating> for UserRatings {
 impl From<User> for UserRatings {
     fn from(w: User) -> Self {
         (w, Rating::default()).into()
+    }
+}
+
+
+impl From<WhereClause> for UserRatings {
+    fn from(w: WhereClause) -> Self {
+        (User::default(), Rating::from(w)).into()
     }
 }
 
@@ -58,8 +66,6 @@ impl Filter<models::Ratings> for UserRatings {
 impl Filter<models::UserRatings> for UserRatings {
     fn filter(&self, user_rating: &models::UserRatings) -> bool {
         let valid_user = self.0.filter(&user_rating.user);
-
-        
 
         valid_user
     }

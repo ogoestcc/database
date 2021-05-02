@@ -6,6 +6,7 @@ use crate::{
     models,
 };
 
+mod ratings;
 
 #[async_trait]
 impl Database<models::Alerts> for CSVDatabase {
