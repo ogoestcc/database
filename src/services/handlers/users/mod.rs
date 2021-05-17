@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     models::{self, wherables},
-    services::{traits, types::users as service},
+    services::{traits, services::users as service, types::users as types},
 };
 
 pub mod ratings;
@@ -24,7 +24,7 @@ pub async fn get<DB: traits::Users>(
         });
 
     let users: Vec<models::Users> = db_connection.get(r#where).await;
-    let users: Vec<service::User> = users.iter().map(From::from).collect();
+    let users: Vec<types::User> = users.iter().map(From::from).collect();
 
     service::Response {
         metadata: service::Metadata {

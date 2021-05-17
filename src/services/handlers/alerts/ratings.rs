@@ -1,10 +1,10 @@
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 
 use models::wherables::AlertRatings;
 
 use crate::{
     models::{self, wherables},
-    services::{traits, types::alerts::ratings as service},
+    services::{traits, services::alerts::ratings as service},
 };
 
 pub async fn get<DB: traits::Alerts>(

@@ -5,12 +5,15 @@ use crate::{
         wherables::{Alert, Rating},
     },
 };
+
+#[cfg(feature = "postgres")]
 use queler::clause::Clause;
 
 #[derive(Debug, Clone, Default)]
 pub struct AlertRatings(Alert, Rating);
 
 impl Wherable for AlertRatings {
+    #[cfg(feature = "postgres")]
     fn clause(&self) -> Clause {
         let alert = self.0.clause();
         let rating = self.1.clause();

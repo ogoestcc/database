@@ -3,6 +3,7 @@ use serde::Deserialize;
 
 mod alerts;
 mod users;
+mod ratings;
 
 pub struct CSVDatabase;
 

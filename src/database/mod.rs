@@ -3,10 +3,11 @@ pub use async_trait::async_trait;
 #[cfg(feature = "csv")]
 mod csv;
 
-#[cfg(not(feature = "csv"))]
+#[cfg(feature = "postgres")]
 mod postgres;
 
 pub trait Wherable {
+    #[cfg(feature = "postgres")]
     fn clause(&self) -> queler::clause::Clause;
 }
 
@@ -17,7 +18,7 @@ pub trait Filter<M> {
 #[cfg(feature = "csv")]
 pub use csv::CSVDatabase;
 
-#[cfg(not(feature = "csv"))]
+#[cfg(feature = "postgres")]
 pub use postgres::PostgresDatabase;
 
 #[async_trait]

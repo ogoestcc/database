@@ -1,4 +1,6 @@
 use crate::{database, models, services::types::ratings::WhereClause};
+
+#[cfg(feature = "postgres")]
 use queler::clause::Clause;
 
 #[derive(Debug, Clone, Default)]
@@ -11,6 +13,7 @@ pub struct Rating {
 }
 
 impl database::Wherable for Rating {
+    #[cfg(feature = "postgres")]
     fn clause(&self) -> Clause {
         let user_id = if self.user_id.is_some() {
             let user_id = self.user_id.clone().unwrap();
@@ -68,7 +71,37 @@ impl From<WhereClause> for Rating {
 }
 
 impl database::Filter<models::Ratings> for Rating {
-    fn filter(&self, _: &models::Ratings) -> bool {
-        false
+    fn filter(&self, rating: &models::Ratings) -> bool {
+        if let Some(user_id) = &self.user_id {
+            if user_id != &rating.user_id.to_string() {
+                return false;
+            }
+        }
+
+        if let Some(alert_id) = &self.alert_id {
+            if alert_id != &rating.alert_id {
+                return false;
+            }
+        }
+
+        if let Some(like) = &self.like {
+            if like != &rating.like {
+                return false;
+            }
+        }
+
+        if let Some(dislike) = &self.dislike {
+            if dislike != &rating.dislike {
+                return false;
+            }
+        }
+
+        if let Some(critical) = &self.critical {
+            if critical != &rating.critical {
+                return false;
+            }
+        }
+
+        true
     }
 }

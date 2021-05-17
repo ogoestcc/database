@@ -5,12 +5,12 @@ use tokio_pg_mapper::FromTokioPostgresRow;
 
 use crate::{
     database::{Database, Filter, PostgresDatabase, Wherable},
-    models::{users::UserContents, wherables, Contents, Ratings, Users},
+    models::{users::UserContents, Contents, Users},
 };
 
 #[async_trait::async_trait]
 impl Database<UserContents> for PostgresDatabase {
-    async fn get<W>(&self, r#where: W) -> Vec<UserContents>
+    async fn get<W>(&self, _: W) -> Vec<UserContents>
     where
         W: Wherable + Filter<UserContents> + Send + Sync,
     {
@@ -20,7 +20,7 @@ impl Database<UserContents> for PostgresDatabase {
         let con_fields = Contents::sql_fields();
 
         let mut users_columns: Vec<_> = usr_fields
-            .split(", ")
+            .split(",")
             .map(|column| format!("usr.{}", column.trim()))
             .collect();
         let mut content_columns: Vec<_> = con_fields
@@ -51,18 +51,17 @@ impl Database<UserContents> for PostgresDatabase {
         let mut hash = HashMap::<i64, UserContents>::new();
 
         for row in &client.query(&statement, &[]).await.unwrap() {
-            let rating = Contents::from_row_ref_with_prefix(row, "con_");
 
-            let user = Users::from_row_ref(row).unwrap();
+            let (user, content) = super::deserializer::user_and_preferences(row, None, Some("con_"));
 
-            if let Some(user_rating) = hash.get_mut(&user.id) {
-                user_rating.preferences.push(rating);
+            if let Some(user_content) = hash.get_mut(&user.id) {
+                user_content.preferences.push(content);
             } else {
                 hash.insert(
                     user.id,
                     UserContents {
                         user,
-                        preferences: vec![rating],
+                        preferences: vec![content],
                     },
                 );
             }

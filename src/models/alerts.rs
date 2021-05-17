@@ -1,6 +1,8 @@
 use chrono::NaiveDateTime;
 
-use serde::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
+
+#[cfg(feature = "postgres")]
 use tokio_pg_mapper_derive::PostgresMapper;
 
 use crate::{models::Ratings, services::types::alerts as alert_service, utils::parser::parse_date};
@@ -10,8 +12,9 @@ fn default_date() -> NaiveDateTime {
 }
 
 #[repr(C)]
-#[derive(Debug, Serialize, Deserialize, PostgresMapper, Clone)]
-#[pg_mapper(table = "alerts")]
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[cfg_attr(feature = "postgres", derive(PostgresMapper))]
+#[cfg_attr(feature = "postgres", pg_mapper(table = "alerts"))]
 pub struct Alerts {
     #[serde(default, rename = "cveid")]
     pub id: String,
@@ -36,6 +39,7 @@ pub struct Alerts {
     )]
     updated_at: NaiveDateTime,
 }
+
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AlertRatings {
@@ -66,3 +70,4 @@ impl From<&Alerts> for alert_service::Alert {
         }
     }
 }
+

@@ -1,3 +1,4 @@
+#[cfg(feature = "postgres")]
 use queler::clause::Clause;
 
 use crate::{
@@ -12,6 +13,7 @@ pub struct Alert {
 }
 
 impl Wherable for Alert {
+    #[cfg(feature = "postgres")]
     fn clause(&self) -> Clause {
         let id = if self.id.is_some() {
             let id = self.id.clone().unwrap();

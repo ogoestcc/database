@@ -1,61 +1,54 @@
 pub mod alerts;
+pub mod types;
 pub mod users;
+pub mod ratings;
 
 mod handlers;
 
 pub use alerts::AlertsService;
 pub use users::UsersService;
+pub use ratings::RatingsService;
 
-mod database {
-    tonic::include_proto!("database");
+mod protos {
+    pub mod database {
+        tonic::include_proto!("proto.database");
+    }
+
+    pub mod types {
+        tonic::include_proto!("proto.types");
+    }
 }
 
-pub mod types {
-
-    use super::{database, handlers};
+pub mod services {
+    use super::{handlers, protos};
 
     pub mod users {
-        use super::{database, handlers};
+        use super::protos::database;
 
-        pub use database::{
-            get_users_response::Metadata, users_server as server, GetUsersRequest as Request,
-            GetUsersResponse as Response, User, UserWhereClause as WhereClause,
-        };
+        pub use database::{get_users::*, users_server as server};
 
-        pub use handlers::users as handler;
+        pub use super::handlers::users as handler;
 
         pub type GetInput = tonic::Request<Request>;
         pub type GetOutput = Result<tonic::Response<Response>, tonic::Status>;
 
         pub mod ratings {
-            use super::{database, handlers::users};
 
-            pub use database::{
-                get_users_and_ratings_response::Metadata, GetUsersAndRatingsRequest as Request,
-                GetUsersAndRatingsResponse as Response, UsersRatings,
+            pub use super::{
+                super::handlers::users::ratings as handler, database::get_users_and_ratings::*,
             };
-
-            pub use users::ratings as handler;
-
-            pub use database::RatingWhereClause as WhereClause;
 
             pub type GetInput = tonic::Request<Request>;
             pub type GetOutput = Result<tonic::Response<Response>, tonic::Status>;
         }
 
         pub mod contents {
-            use super::{database, handlers::users};
-
-            pub use database::{
-                get_users_and_contents_response::Metadata, GetUsersAndContentsResponse as Response,
-                GetUsersRequest as Request, UsersContents,
+            pub use super::{
+                super::handlers::users::contents as handler, database::get_users_and_contents::*,
+                Request,
             };
 
-            pub use users::contents as handler;
-
-            pub use database::UserWhereClause as WhereClause;
-
-            pub type GetInput = tonic::Request<super::Request>;
+            pub type GetInput = tonic::Request<Request>;
             pub type GetOutput = Result<tonic::Response<Response>, tonic::Status>;
 
             impl<T: Into<UsersContents> + Clone> From<&T> for UsersContents {
@@ -64,39 +57,23 @@ pub mod types {
                 }
             }
         }
-
-        impl<T: Into<User> + Clone> From<&T> for User {
-            fn from(base: &T) -> Self {
-                base.clone().into()
-            }
-        }
     }
 
     pub mod alerts {
-        use super::{database, handlers};
+        use super::protos::database;
 
-        pub use database::{
-            alerts_server as server, get_alerts_response::Metadata, Alert,
-            AlertWhereClause as WhereClause, GetAlertsRequest as Request,
-            GetAlertsResponse as Response,
-        };
+        pub use database::{alerts_server as server, get_alerts::*};
 
-        pub use handlers::alerts as handler;
+        pub use super::handlers::alerts as handler;
 
         pub type GetInput = tonic::Request<Request>;
         pub type GetOutput = Result<tonic::Response<Response>, tonic::Status>;
 
         pub mod ratings {
-            use super::{database, handlers::alerts};
 
-            pub use database::{
-                get_alerts_and_ratings_response::Metadata, AlertsRatings,
-                GetAlertsAndRatingsRequest as Request, GetAlertsAndRatingsResponse as Response,
+            pub use super::{
+                super::handlers::alerts::ratings as handler, database::get_alerts_and_ratings::*,
             };
-
-            pub use alerts::ratings as handler;
-
-            pub use database::RatingWhereClause as WhereClause;
 
             pub type GetInput = tonic::Request<Request>;
             pub type GetOutput = Result<tonic::Response<Response>, tonic::Status>;
@@ -104,27 +81,14 @@ pub mod types {
     }
 
     pub mod ratings {
-        use super::database;
+        use super::protos::database;
 
-        pub use database::{Rating, RatingWhereClause as WhereClause};
+        pub use database::{get_ratings::*, ratings_server as server};
 
-        impl<T: Into<Rating> + Clone> From<&T> for Rating {
-            fn from(base: &T) -> Self {
-                base.clone().into()
-            }
-        }
-    }
+        pub use super::handlers::ratings as handler;
 
-    pub mod contents {
-        use super::database;
-
-        pub use database::Content;
-
-        impl<T: Into<Content> + Clone> From<&T> for Content {
-            fn from(base: &T) -> Self {
-                base.clone().into()
-            }
-        }
+        pub type GetInput = tonic::Request<Request>;
+        pub type GetOutput = Result<tonic::Response<Response>, tonic::Status>;
     }
 }
 
@@ -158,4 +122,11 @@ mod traits {
     }
     impl<T> Alerts for T where T: Database<models::Alerts> + Database<models::AlertRatings> + Send + Sync
     {}
+
+    pub trait Ratings: Database<models::Ratings> + Send + Sync
+    where
+        Self: std::marker::Sized,
+    {
+    }
+    impl<T> Ratings for T where T: Database<models::Ratings> + Send + Sync {}
 }

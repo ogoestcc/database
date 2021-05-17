@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     models::{self, wherables},
-    services::{traits, types::users::contents as service},
+    services::{traits, services::users::contents as service},
 };
 
 pub async fn get<DB: traits::Users>(

@@ -39,9 +39,9 @@ impl Database<UserRatings> for PostgresDatabase {
         let mut hash = HashMap::<i64, UserRatings>::new();
 
         for row in &client.query(&statement, &[]).await.unwrap() {
-            let rating = Ratings::from_row_ref(row).unwrap();
+            let rating = Ratings::from_row_ref_prefixed(row, "").unwrap();
 
-            let user = Users::from_row_ref(row).unwrap();
+            let user = Users::from_row_ref_prefixed(row, "").unwrap();
 
             if let Some(user_rating) = hash.get_mut(&user.id) {
                 user_rating.ratings.push(rating);

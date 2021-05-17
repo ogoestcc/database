@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use crate::services::{
     traits,
-    types::users::{self, contents, ratings, server},
+    services::users::{self, contents, ratings, server},
 };
 
 pub struct UsersService<DB>

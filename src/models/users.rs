@@ -1,8 +1,10 @@
 use chrono::NaiveDateTime;
-use serde::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
+
+#[cfg(feature = "postgres")]
 use tokio_pg_mapper_derive::PostgresMapper;
 
-use crate::{models, services::types::users as user_service, utils::parser::preferences};
+use crate::{models, services::types::users as user_service};
 
 fn default_active() -> bool {
     true
@@ -13,8 +15,9 @@ pub fn default_date() -> NaiveDateTime {
 }
 
 #[repr(C)]
-#[derive(Debug, PostgresMapper, Serialize, Deserialize, Clone)]
-#[pg_mapper(table = "users")]
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[cfg_attr(feature = "postgres", derive(PostgresMapper))]
+#[cfg_attr(feature = "postgres", pg_mapper(table = "users"))]
 pub struct Users {
     #[serde(rename = "user_id")]
     pub id: i64,
@@ -73,6 +76,22 @@ pub struct UserContents {
     pub preferences: Vec<models::Contents>,
 }
 
+pub mod preferences {
+    use serde::{Deserialize, Deserializer};
+
+    use crate::models::Contents;
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<Contents>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(String::deserialize(deserializer)?
+            .replace(&['[', ']', '\'', ' '][..], "")
+            .split(',')
+            .map(|s| s.into())
+            .collect())
+    }
+}
 
 impl Into<user_service::User> for Users {
     fn into(self) -> user_service::User {

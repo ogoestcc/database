@@ -1,14 +1,14 @@
-use serde::{Deserialize, Serialize};
-use tokio_pg_mapper_derive::PostgresMapper;
+use serde_derive::{Deserialize, Serialize};
 
-#[cfg(not(feature = "csv"))]
-use tokio_postgres::Row;
+#[cfg(feature = "postgres")]
+use tokio_pg_mapper_derive::PostgresMapper;
 
 use crate::services::types::contents::Content;
 
 #[repr(C)]
-#[derive(Default, Debug, PostgresMapper, Serialize, Deserialize, Clone)]
-#[pg_mapper(table = "contents")]
+#[derive(Default, Debug, Serialize, Deserialize, Clone)]
+#[cfg_attr(feature = "postgres", derive(PostgresMapper))]
+#[cfg_attr(feature = "postgres", pg_mapper(table = "alerts"))]
 pub struct Contents {
     pub id: String,
     description: Option<String>,
@@ -29,15 +29,9 @@ impl Into<Content> for Contents {
     }
 }
 
-#[cfg(not(feature = "csv"))]
-impl Contents {
-    pub fn from_row_ref_with_prefix(row: &Row, prefix: &str) -> Self {
-        Self {
-            id: row.get(format!("{}id", prefix).as_str()),
-            description: row.get(format!("{}description", prefix).as_str()),
-            is_product: row.get(format!("{}is_product", prefix).as_str()),
-            active: row.get(format!("{}active", prefix).as_str()),
-        }
+impl ToString for Contents {
+    fn to_string(&self) -> String {
+        self.id.clone()
     }
 }
 

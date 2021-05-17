@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     models::{self, wherables},
-    services::{traits, types::alerts as service},
+    services::{traits, services::alerts as service, types::alerts as types},
 };
 
 pub mod ratings;
@@ -23,7 +23,7 @@ pub async fn get<DB: traits::Alerts>(
     };
 
     let alerts: Vec<models::Alerts> = db_connection.get(r#where).await;
-    let alerts: Vec<service::Alert> = alerts.iter().map(From::from).collect();
+    let alerts: Vec<types::Alert> = alerts.iter().map(From::from).collect();
 
     service::Response {
         metadata: service::Metadata {

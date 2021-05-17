@@ -22,7 +22,6 @@ pub mod parse_date {
 
         Ok(as_datetime.unwrap_or(default).naive_utc())
     }
-
 }
 
 pub mod int_as_bool {
@@ -33,7 +32,7 @@ pub mod int_as_bool {
     where
         S: Serializer,
     {
-        let data = if *dt { 1u16 } else { 0u16};
+        let data = if *dt { 1u16 } else { 0u16 };
 
         data.to_string().serialize(serializer)
     }
@@ -46,21 +45,40 @@ pub mod int_as_bool {
 
         Ok(if deserialized == 0 { false } else { true })
     }
-
 }
 
 pub mod preferences {
-    use serde::{Deserialize, Deserializer};
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
+    use crate::models::Contents;
 
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<crate::models::Contents>, D::Error>
+    pub fn _serialize<S>(dt: &Option<Vec<Contents>>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        if let Some(dt) = dt {
+            let joined = dt
+                .iter()
+                .map(|cnt| cnt.to_string())
+                .collect::<Vec<String>>()
+                .join(",");
+
+            format!("[{}]", joined).serialize(serializer)
+        } else {
+            serializer.serialize_none()
+        }
+    }
+
+    pub fn _deserialize<'de, D>(deserializer: D) -> Result<Option<Vec<Contents>>, D::Error>
     where
         D: Deserializer<'de>,
     {
-        Ok(String::deserialize(deserializer)?
-            .replace(&['[', ']', '\'', ' '][..], "")
-            .split(',')
-            .map(|s| s.into())
-            .collect())
+        Ok(Some(
+            String::deserialize(deserializer)?
+                .replace(&['[', ']', '\'', ' '][..], "")
+                .split(',')
+                .map(|s| s.into())
+                .collect(),
+        ))
     }
 }

@@ -4,3 +4,6 @@
 [submodule "queler"]
 	path = queler
 	url = git@github.com:ogoes/queler.git
+[submodule "tokio_pg_mapper"]
+	path = tokio_pg_mapper
+	url = git@github.com:ogoes/tokio-postgres-mapper.git

@@ -6,12 +6,15 @@ use crate::{
     },
     services::types::ratings::WhereClause,
 };
+
+#[cfg(feature = "postgres")]
 use queler::clause::Clause;
 
 #[derive(Debug, Clone, Default)]
 pub struct UserRatings(User, Rating);
 
 impl Wherable for UserRatings {
+    #[cfg(feature = "postgres")]
     fn clause(&self) -> Clause {
         let user = self.0.clause();
         let rating = self.1.clause();

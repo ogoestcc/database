@@ -1,5 +1,8 @@
 use chrono::NaiveDateTime;
-use serde::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
+
+
+#[cfg(feature = "postgres")]
 use tokio_pg_mapper_derive::PostgresMapper;
 
 use crate::{
@@ -12,21 +15,35 @@ fn default_date() -> NaiveDateTime {
 }
 
 #[repr(C)]
-#[derive(Debug, PostgresMapper, Serialize, Deserialize, Clone)]
-#[pg_mapper(table = "ratings")]
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[cfg_attr(feature = "postgres", derive(PostgresMapper))]
+#[cfg_attr(feature = "postgres", pg_mapper(table = "ratings"))]
 pub struct Ratings {
     #[serde(rename = "userid")]
     pub user_id: i64,
     #[serde(default, rename = "cveid")]
-    alert_id: String,
+    pub alert_id: String,
     #[serde(default, with = "int_as_bool")]
-    like: bool,
+    pub like: bool,
     #[serde(default, with = "int_as_bool")]
-    dislike: bool,
+    pub dislike: bool,
     #[serde(default, with = "int_as_bool")]
-    critical: bool,
+    pub critical: bool,
     #[serde(default = "default_date", with = "parse_date")]
-    created_at: NaiveDateTime,
+    pub created_at: NaiveDateTime,
+}
+
+impl Default for Ratings {
+    fn default() -> Self {
+        Self {
+            user_id: 0i64,
+            alert_id: "".into(),
+            like: false,
+            dislike: false,
+            critical: false,
+            created_at: NaiveDateTime::from_timestamp(0, 42_000_000),
+        }
+    }
 }
 
 impl Into<Rating> for Ratings {
@@ -38,6 +55,7 @@ impl Into<Rating> for Ratings {
             dislike: self.dislike,
             critical: self.critical,
             created_at: self.created_at.to_string(),
+            ..Default::default()
         }
     }
 }

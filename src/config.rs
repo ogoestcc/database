@@ -1,10 +1,11 @@
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, serde_derive::Deserialize)]
 pub struct ServerConfig {
     pub port: u32,
 }
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, serde_derive::Deserialize)]
 pub struct Config {
     pub server: ServerConfig,
+    #[cfg(feature = "postgres")]
     pub postgres: deadpool_postgres::Config,
 }
 
