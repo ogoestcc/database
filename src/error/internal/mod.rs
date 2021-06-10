@@ -26,7 +26,7 @@ impl<E: std::error::Error> From<E> for Connection {
     }
 }
 
-pub struct StdError(String);
+pub struct StdError(pub String);
 impl Kind for StdError {
     fn to_string(&self) -> String {
         self.0.clone()

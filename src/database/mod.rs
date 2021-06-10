@@ -7,7 +7,7 @@ pub use csv::CSVDatabase;
 pub use postgres::PostgresDatabase;
 use sea_query::query::QueryStatementBuilder;
 
-use crate::error::Error;
+use crate::error::{Error, Internal, StdError};
 
 #[cfg(feature = "csv")]
 mod csv;
@@ -28,8 +28,15 @@ pub trait Filter<M> {
 }
 
 #[async_trait]
-pub trait Database<Model> {
+pub trait Database<Model>
+where
+    Model: Send + 'static,
+{
     async fn get<W>(&self, r#where: W) -> Result<Vec<Model>, Error>
     where
         W: Wherable + Filter<Model> + Send + Sync;
+
+    async fn create(&self, _: Model) -> Result<Model, Error> {
+        Err(StdError("Unimplemented".to_owned())).map_err(Internal::from)?
+    }
 }

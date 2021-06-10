@@ -1,3 +1,5 @@
+use lazy_static::lazy_static;
+
 use sea_query::{Iden, Order, PostgresQueryBuilder, Query};
 
 mod deserializer;
@@ -9,9 +11,34 @@ use super::{Database, PostgresDatabase};
 
 use crate::{
     database::Wherable,
-    error::{Error, Internal},
+    error::{Error, Internal, StdError},
     models::Users,
 };
+
+#[derive(Iden, Clone)]
+#[iden = "users"]
+enum UsersDef {
+    Table,
+    Id,
+    Email,
+    Password,
+    Active,
+    CreatedAt,
+    UpdatedAt,
+    DeletedAt,
+}
+
+lazy_static! {
+    static ref USER_COLUMNS: &'static [UsersDef] = &[
+        UsersDef::Id,
+        UsersDef::Email,
+        UsersDef::Password,
+        UsersDef::Active,
+        UsersDef::CreatedAt,
+        UsersDef::UpdatedAt,
+        UsersDef::DeletedAt,
+    ];
+}
 
 #[async_trait::async_trait]
 impl Database<Users> for PostgresDatabase {
@@ -21,18 +48,9 @@ impl Database<Users> for PostgresDatabase {
     {
         let client = self.0.get().await.map_err(Internal::from)?;
 
-        let columns = vec![
-            UsersDef::Id,
-            UsersDef::Email,
-            UsersDef::Password,
-            UsersDef::Active,
-            UsersDef::CreatedAt,
-            UsersDef::UpdatedAt,
-        ];
-
         let select = r#where
             .conditions(Query::select().from(UsersDef::Table))
-            .columns(columns)
+            .columns(USER_COLUMNS.to_vec())
             .order_by(UsersDef::Id, Order::Desc)
             .to_string(PostgresQueryBuilder);
 
@@ -51,16 +69,26 @@ impl Database<Users> for PostgresDatabase {
             .map(|row| deserializer::user(row, None))
             .collect())
     }
-}
 
-#[derive(Iden)]
-#[iden = "users"]
-enum UsersDef {
-    Table,
-    Id,
-    Email,
-    Password,
-    Active,
-    CreatedAt,
-    UpdatedAt,
+    async fn create(&self, user: Users) -> Result<Users, Error> {
+        let client = self.0.get().await.map_err(Internal::from)?;
+
+        let insert = Query::insert()
+            .into_table(UsersDef::Table)
+            .returning(Query::select().columns(USER_COLUMNS.to_vec()).to_owned())
+            .columns(vec![UsersDef::Email, UsersDef::Password])
+            .values(vec![user.email().into(), user.password().into()])
+            .map_err(Internal::from)?
+            .to_string(PostgresQueryBuilder);
+
+        client
+            .query(insert.as_str(), &[])
+            .await
+            .map_err(Internal::from)?
+            .first()
+            .map_or_else(
+                || Err(Internal::from(StdError("User not created".to_owned())).into()),
+                |row| Ok(deserializer::user(row, None)),
+            )
+    }
 }

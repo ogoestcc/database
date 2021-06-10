@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+use service::operations::create;
+
 use crate::{
     models::{self, wherables},
     services::{services::users as service, traits, types::users as types},
@@ -33,4 +35,19 @@ pub async fn get<DB: traits::Users>(
         },
         users,
     })
+}
+
+pub async fn create<DB: traits::Users>(
+    db_connection: Arc<DB>,
+    request: create::Request,
+) -> Result<create::Response, tonic::Status> {
+    log::debug!("Request {:?}", request);
+
+    let create::Request { user } = request;
+
+    let mut new_user = models::Users::default();
+    new_user.set_email(user.email.unwrap());
+    new_user.set_password(user.password.unwrap());
+
+    Ok(db_connection.create(new_user).await?.into())
 }

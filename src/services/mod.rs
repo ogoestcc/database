@@ -21,7 +21,7 @@ mod protos {
 
 #[allow(clippy::module_inception)]
 pub mod services {
-    use super::{handlers, protos};
+    use super::{handlers, protos, types};
 
     pub mod users {
         use super::protos::database;
@@ -32,6 +32,39 @@ pub mod services {
 
         pub type GetInput = tonic::Request<Request>;
         pub type GetOutput = Result<tonic::Response<Response>, tonic::Status>;
+
+        pub mod operations {
+            use super::super::types::users;
+            use super::database::operations;
+
+            pub mod create {
+                pub use super::{operations::Create as Request, users::User as Response};
+
+                pub type Input = tonic::Request<Request>;
+                pub type Output = Result<tonic::Response<Response>, tonic::Status>;
+            }
+
+            pub mod retrieve {
+                pub use super::{operations::Retrieve as Request, users::User as Response};
+
+                pub type Input = tonic::Request<Request>;
+                pub type Output = Result<tonic::Response<Response>, tonic::Status>;
+            }
+
+            pub mod update {
+                pub use super::{operations::Update as Request, users::User as Response};
+
+                pub type Input = tonic::Request<Request>;
+                pub type Output = Result<tonic::Response<Response>, tonic::Status>;
+            }
+
+             pub mod delete {
+                pub use super::{operations::Delete as Request, users::User as Response};
+
+                pub type Input = tonic::Request<Request>;
+                pub type Output = Result<tonic::Response<Response>, tonic::Status>;
+            }
+        }
 
         pub mod ratings {
 

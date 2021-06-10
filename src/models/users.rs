@@ -46,6 +46,26 @@ impl Users {
     pub fn is_active(&self) -> bool {
         self.active
     }
+
+    /// Get a reference to the users's email.
+    pub fn email(&self) -> &str {
+        self.email.as_str()
+    }
+
+    /// Get a reference to the users's password.
+    pub fn password(&self) -> &str {
+        self.password.as_str()
+    }
+
+    /// Set the users's email.
+    pub fn set_email(&mut self, email: String) {
+        self.email = email;
+    }
+
+    /// Set the users's password.
+    pub fn set_password(&mut self, password: String) {
+        self.password = password;
+    }
 }
 
 impl Default for Users {
