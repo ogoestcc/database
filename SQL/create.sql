@@ -1,10 +1,9 @@
-
 -- users definition
 -- Drop table
 DROP TABLE IF EXISTS users;
 
 CREATE TABLE users (
-    id int8 NOT NULL,
+    id serial NOT NULL,
     email varchar(255) NOT NULL,
     "password" varchar(255) NOT NULL,
     active bool NOT NULL DEFAULT true,
@@ -31,7 +30,7 @@ CREATE TABLE contents (
 DROP TABLE IF EXISTS users_contents;
 
 CREATE TABLE users_contents (
-    user_id int8 NOT NULL,
+    user_id bigint unsigned NOT NULL,
     content_id varchar(50) NOT NULL,
     relevance float4 NOT NULL DEFAULT 1.0,
     CONSTRAINT users_contents_pk PRIMARY KEY (user_id, content_id),
@@ -61,7 +60,7 @@ CREATE TABLE alerts (
 DROP TABLE IF EXISTS ratings;
 
 CREATE TABLE ratings (
-    user_id int8 NOT NULL,
+    user_id bigint unsigned NOT NULL,
     alert_id varchar(20) NOT NULL,
     "like" bool NOT NULL DEFAULT false,
     dislike bool NOT NULL DEFAULT false,
