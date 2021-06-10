@@ -4,23 +4,24 @@ use queler::{clause, select};
 use tokio_pg_mapper::FromTokioPostgresRow;
 
 use crate::{
-    database::{Database, Filter, PostgresDatabase, Wherable},
+    database::{Database, PostgresDatabase, Wherable},
+    error::{Error, Internal},
     models::{users::UserContents, Contents, Users},
 };
 
 #[async_trait::async_trait]
-impl Database<UserContents> for PostgresDatabase {
-    async fn get<W>(&self, _: W) -> Vec<UserContents>
+impl<'a> Database<UserContents> for PostgresDatabase {
+    async fn get<W>(&self, _: W) -> Result<Vec<UserContents>, Error>
     where
-        W: Wherable + Filter<UserContents> + Send + Sync,
+        W: Wherable + Send + Sync,
     {
-        let client = self.0.get().await.unwrap();
+        let client = self.0.get().await.map_err(Internal::from)?;
 
         let usr_fields = Users::sql_fields();
         let con_fields = Contents::sql_fields();
 
         let mut users_columns: Vec<_> = usr_fields
-            .split(",")
+            .split(',')
             .map(|column| format!("usr.{}", column.trim()))
             .collect();
         let mut content_columns: Vec<_> = con_fields
@@ -51,8 +52,8 @@ impl Database<UserContents> for PostgresDatabase {
         let mut hash = HashMap::<i64, UserContents>::new();
 
         for row in &client.query(&statement, &[]).await.unwrap() {
-
-            let (user, content) = super::deserializer::user_and_preferences(row, None, Some("con_"));
+            let (user, content) =
+                super::deserializer::user_and_preferences(row, None, Some("con_"));
 
             if let Some(user_content) = hash.get_mut(&user.id) {
                 user_content.preferences.push(content);
@@ -67,11 +68,7 @@ impl Database<UserContents> for PostgresDatabase {
             }
         }
 
-        let mut ratings = vec![];
-        for (_, rating) in hash {
-            ratings.push(rating);
-        }
-        ratings
+        Ok(hash.values().map(|v| v.to_owned()).collect())
     }
     // async fn get<W>(&self, r#where: W) -> Vec<UserContents>
     // where

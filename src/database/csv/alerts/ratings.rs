@@ -1,7 +1,6 @@
 use serde_derive::Deserialize;
 use std::collections::HashMap;
 
-
 use async_trait::async_trait;
 
 use super::super::CSVDatabase;
@@ -10,15 +9,13 @@ use crate::{
     models::{self, AlertRatings, Alerts, Ratings},
 };
 
-
 #[derive(Debug, Deserialize)]
 struct AlertRatingCSV {
     #[serde(flatten)]
     alert: Alerts,
     #[serde(flatten)]
-    rating: Ratings
+    rating: Ratings,
 }
-
 
 #[async_trait]
 impl Database<models::AlertRatings> for CSVDatabase {

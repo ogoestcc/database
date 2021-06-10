@@ -4,13 +4,13 @@ use models::wherables::AlertRatings;
 
 use crate::{
     models::{self, wherables},
-    services::{traits, services::alerts::ratings as service},
+    services::{services::alerts::ratings as service, traits},
 };
 
 pub async fn get<DB: traits::Alerts>(
     db_connection: Arc<DB>,
     request: service::Request,
-) -> service::Response {
+) -> Result<service::Response, tonic::Status> {
     log::debug!("Request {:?}", request);
 
     let alert_where =
@@ -19,7 +19,7 @@ pub async fn get<DB: traits::Alerts>(
             .clone()
             .map_or(Default::default(), |w| wherables::Alert {
                 id: w.id.clone(),
-                content: w.content.clone(),
+                content: w.content,
             });
 
     let rating_where = request
@@ -35,7 +35,7 @@ pub async fn get<DB: traits::Alerts>(
 
     let r#where = AlertRatings::from((alert_where, rating_where));
 
-    let alerts: Vec<models::AlertRatings> = db_connection.get(r#where).await;
+    let alerts: Vec<models::AlertRatings> = db_connection.get(r#where).await?;
     let alerts: Vec<service::AlertsRatings> = alerts
         .iter()
         .map(|alert| service::AlertsRatings {
@@ -44,12 +44,12 @@ pub async fn get<DB: traits::Alerts>(
         })
         .collect();
 
-    service::Response {
+    Ok(service::Response {
         metadata: service::Metadata {
             total: alerts.len() as u64,
             alert_where: request.alert_where,
             rating_where: request.rating_where,
         },
         alerts,
-    }
+    })
 }

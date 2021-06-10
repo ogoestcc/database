@@ -40,7 +40,6 @@ pub struct Alerts {
     updated_at: NaiveDateTime,
 }
 
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AlertRatings {
     pub alert: Alerts,
@@ -49,7 +48,7 @@ pub struct AlertRatings {
 
 impl Alerts {
     pub fn same_id(&self, id: String) -> bool {
-        return self.id == id;
+        self.id == id
     }
 
     pub fn has_content(&self, content: String) -> bool {
@@ -70,4 +69,3 @@ impl From<&Alerts> for alert_service::Alert {
         }
     }
 }
-

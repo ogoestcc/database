@@ -35,7 +35,6 @@ impl From<User> for UserRatings {
     }
 }
 
-
 impl From<WhereClause> for UserRatings {
     fn from(w: WhereClause) -> Self {
         (User::default(), Rating::from(w)).into()
@@ -68,8 +67,6 @@ impl Filter<models::Ratings> for UserRatings {
 
 impl Filter<models::UserRatings> for UserRatings {
     fn filter(&self, user_rating: &models::UserRatings) -> bool {
-        let valid_user = self.0.filter(&user_rating.user);
-
-        valid_user
+        self.0.filter(&user_rating.user)
     }
 }

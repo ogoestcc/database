@@ -1,7 +1,6 @@
 use chrono::NaiveDateTime;
 use serde_derive::{Deserialize, Serialize};
 
-
 #[cfg(feature = "postgres")]
 use tokio_pg_mapper_derive::PostgresMapper;
 
@@ -46,15 +45,15 @@ impl Default for Ratings {
     }
 }
 
-impl Into<Rating> for Ratings {
-    fn into(self) -> Rating {
+impl From<Ratings> for Rating {
+    fn from(rating: Ratings) -> Self {
         Rating {
-            user_id: self.user_id as i32,
-            alert_id: self.alert_id.clone(),
-            like: self.like,
-            dislike: self.dislike,
-            critical: self.critical,
-            created_at: self.created_at.to_string(),
+            user_id: rating.user_id as i32,
+            alert_id: rating.alert_id.clone(),
+            like: rating.like,
+            dislike: rating.dislike,
+            critical: rating.critical,
+            created_at: rating.created_at.to_string(),
             ..Default::default()
         }
     }

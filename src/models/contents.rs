@@ -12,19 +12,15 @@ use crate::services::types::contents::Content;
 pub struct Contents {
     pub id: String,
     description: Option<String>,
-    #[serde(default)]
-    is_product: bool,
-    #[serde(default)]
-    active: bool,
 }
 
-impl Into<Content> for Contents {
-    fn into(self) -> Content {
+impl From<Contents> for Content {
+    fn from(cnt: Contents) -> Self {
         Content {
-            id: self.id,
-            description: self.description,
-            is_product: self.is_product,
-            active: self.active,
+            id: cnt.id,
+            description: cnt.description,
+            is_product: false,
+            active: true,
         }
     }
 }

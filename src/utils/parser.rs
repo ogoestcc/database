@@ -43,7 +43,7 @@ pub mod int_as_bool {
     {
         let deserialized = u16::deserialize(d)?;
 
-        Ok(if deserialized == 0 { false } else { true })
+        Ok(deserialized != 0)
     }
 }
 

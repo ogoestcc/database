@@ -6,8 +6,8 @@ use crate::{
     models,
 };
 
-mod ratings;
 mod contents;
+mod ratings;
 
 #[async_trait]
 impl Database<models::Users> for CSVDatabase {

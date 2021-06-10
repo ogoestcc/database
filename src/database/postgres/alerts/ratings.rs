@@ -5,21 +5,17 @@ use tokio_pg_mapper::FromTokioPostgresRow;
 
 use crate::{
     database::Wherable,
-    models::{
-        wherables,
-        alerts::AlertRatings,
-        Ratings, Alerts,
-    },
+    error::{Error, Internal},
+    models::{alerts::AlertRatings, wherables, Alerts, Ratings},
 };
-
 
 #[async_trait::async_trait]
 impl Database<AlertRatings> for PostgresDatabase {
-    async fn get<W>(&self, r#where: W) -> Vec<AlertRatings>
+    async fn get<W>(&self, r#where: W) -> Result<Vec<AlertRatings>, Error>
     where
         W: Wherable + Send + Sync,
     {
-        let client = self.0.get().await.unwrap();
+        let client = self.0.get().await.map_err(Internal::from)?;
 
         let rating_where = wherables::Rating {
             alert_id: Some(r#":alert.id"#.to_string()),
@@ -34,7 +30,10 @@ impl Database<AlertRatings> for PostgresDatabase {
 
         log::debug!("{}", select);
 
-        let statement = client.prepare(select.to_string().as_str()).await.unwrap();
+        let statement = client
+            .prepare(select.to_string().as_str())
+            .await
+            .map_err(Internal::from)?;
 
         let mut hash = HashMap::<String, AlertRatings>::new();
 
@@ -56,11 +55,6 @@ impl Database<AlertRatings> for PostgresDatabase {
                 );
             }
         }
-
-        let mut ratings = vec![];
-        for (_, rating) in hash {
-            ratings.push(rating);
-        }
-        ratings
+        Ok(hash.values().map(|v| v.to_owned()).collect::<Vec<_>>())
     }
 }

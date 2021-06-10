@@ -2,8 +2,8 @@ use csv_lib::Reader;
 use serde::Deserialize;
 
 mod alerts;
-mod users;
 mod ratings;
+mod users;
 
 pub struct CSVDatabase;
 
@@ -18,13 +18,17 @@ impl CSVDatabase {
         let mut rdr = Reader::from_path(file).unwrap();
         let iter = rdr.deserialize();
 
-        iter.filter_map(|u| {
-            match u {
-                Ok(d) => if filter(&d) { Some(d) } else { None },
-                Err(err) => {
-                    log::error!("{:?}", err);
+        iter.filter_map(|u| match u {
+            Ok(d) => {
+                if filter(&d) {
+                    Some(d)
+                } else {
                     None
                 }
+            }
+            Err(err) => {
+                log::error!("{:?}", err);
+                None
             }
         })
         .collect()

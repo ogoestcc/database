@@ -2,13 +2,13 @@ use std::sync::Arc;
 
 use crate::{
     models::{self, wherables},
-    services::{traits, services::users::ratings as service},
+    services::{services::users::ratings as service, traits},
 };
 
 pub async fn get<DB: traits::Users>(
     db_connection: Arc<DB>,
     request: service::Request,
-) -> service::Response {
+) -> Result<service::Response, tonic::Status> {
     log::debug!("Request {:?}", request);
 
     let user_where = request
@@ -33,7 +33,7 @@ pub async fn get<DB: traits::Users>(
 
     let users: Vec<models::UserRatings> = db_connection
         .get(wherables::UserRatings::from((user_where, rating_where)))
-        .await;
+        .await?;
 
     let users: Vec<service::UsersRatings> = users
         .iter()
@@ -43,12 +43,12 @@ pub async fn get<DB: traits::Users>(
         })
         .collect();
 
-    service::Response {
+    Ok(service::Response {
         metadata: service::Metadata {
             total: users.len() as u64,
             user_where: request.user_where,
             rating_where: request.rating_where,
         },
         users,
-    }
+    })
 }

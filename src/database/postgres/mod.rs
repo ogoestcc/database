@@ -1,7 +1,6 @@
-
-mod users;
 mod alerts;
 mod ratings;
+mod users;
 
 pub use super::Database;
 

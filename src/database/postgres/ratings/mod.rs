@@ -1,40 +1,60 @@
-
+use sea_query::{Iden, PostgresQueryBuilder, Query};
 use tokio_pg_mapper::FromTokioPostgresRow;
 
 use super::{Database, PostgresDatabase};
 
 use crate::{
     database::Wherable,
+    error::{Error, Internal},
     models::Ratings,
 };
 
+#[derive(Iden)]
+#[iden = "ratings"]
+enum RatingsTable {
+    Table,
+    UserId,
+    AlertId,
+    Like,
+    Dislike,
+    Critical,
+    CreatedAt,
+}
+
 #[async_trait::async_trait]
 impl Database<Ratings> for PostgresDatabase {
-    async fn get<W>(&self, r#where: W) -> Vec<Ratings>
+    async fn get<W>(&self, r#where: W) -> Result<Vec<Ratings>, Error>
     where
         W: Wherable + Send + Sync,
     {
-        let client = self.0.get().await.unwrap();
+        let client = self.0.get().await.map_err(Internal::from)?;
 
-        let select = queler::select::SelectBuilder::new()
-            .select(&Ratings::sql_fields().split(r#","#).collect::<Vec<&str>>())
-            .from(Ratings::sql_table())
-            .r#where(r#where.clause())
-            .build();
+        let select = r#where
+            .conditions(Query::select().from(RatingsTable::Table))
+            .columns(vec![
+                RatingsTable::Table,
+                RatingsTable::UserId,
+                RatingsTable::AlertId,
+                RatingsTable::Like,
+                RatingsTable::Dislike,
+                RatingsTable::Critical,
+                RatingsTable::CreatedAt,
+            ])
+            .to_string(PostgresQueryBuilder);
 
         log::debug!("RATINGS SQL QUERY: {}", select);
 
-        let statement = client.prepare(select.to_string().as_str()).await.unwrap();
+        let statement = client
+            .prepare(select.as_str())
+            .await
+            .map_err(Internal::from)?;
 
-        client
+        Ok(client
             .query(&statement, &[])
             .await
-            .unwrap()
+            .map_err(Internal::from)?
             .iter()
             .map(|r| Ratings::from_row_ref(r).unwrap())
-            .collect()
+            .collect())
     }
 }
-
-
-

@@ -2,13 +2,13 @@ use std::sync::Arc;
 
 use crate::{
     models::{self, wherables},
-    services::{traits, services::users::contents as service},
+    services::{services::users::contents as service, traits},
 };
 
 pub async fn get<DB: traits::Users>(
     db_connection: Arc<DB>,
     request: service::Request,
-) -> service::Response {
+) -> Result<service::Response, tonic::Status> {
     log::debug!("Request {:?}", request);
 
     let r#where = request
@@ -20,7 +20,7 @@ pub async fn get<DB: traits::Users>(
             email: w.email,
         });
 
-    let users: Vec<models::UserContents> = db_connection.get(r#where).await;
+    let users: Vec<models::UserContents> = db_connection.get(r#where).await?;
     let users: Vec<service::UsersContents> = users
         .iter()
         .map(|user| service::UsersContents {
@@ -29,11 +29,11 @@ pub async fn get<DB: traits::Users>(
         })
         .collect();
 
-     service::Response {
+    Ok(service::Response {
         metadata: service::Metadata {
             total: users.len() as u64,
             user_where: request.r#where,
         },
         users,
-    }
+    })
 }

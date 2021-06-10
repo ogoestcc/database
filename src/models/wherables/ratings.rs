@@ -57,11 +57,7 @@ impl database::Wherable for Rating {
 impl From<WhereClause> for Rating {
     fn from(w: WhereClause) -> Self {
         Rating {
-            user_id: if let Some(id) = w.user_id {
-                Some(id.to_string())
-            } else {
-                None
-            },
+            user_id: w.user_id.map(|id| id.to_string()),
             alert_id: w.alert_id,
             like: w.like,
             dislike: w.dislike,

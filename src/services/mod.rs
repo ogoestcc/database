@@ -1,13 +1,13 @@
 pub mod alerts;
+pub mod ratings;
 pub mod types;
 pub mod users;
-pub mod ratings;
 
 mod handlers;
 
 pub use alerts::AlertsService;
-pub use users::UsersService;
 pub use ratings::RatingsService;
+pub use users::UsersService;
 
 mod protos {
     pub mod database {
@@ -19,6 +19,7 @@ mod protos {
     }
 }
 
+#[allow(clippy::module_inception)]
 pub mod services {
     use super::{handlers, protos};
 

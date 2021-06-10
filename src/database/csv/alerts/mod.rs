@@ -14,9 +14,6 @@ impl Database<models::Alerts> for CSVDatabase {
     where
         W: Filter<models::Alerts> + Send + Sync,
     {
-        self.get_data::<models::Alerts, _>(
-            r"../.dataset/alerts.csv",
-            |alert| r#where.filter(alert),
-        )
+        self.get_data::<models::Alerts, _>(r"../.dataset/alerts.csv", |alert| r#where.filter(alert))
     }
 }

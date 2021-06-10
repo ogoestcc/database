@@ -93,20 +93,16 @@ pub mod preferences {
     }
 }
 
-impl Into<user_service::User> for Users {
-    fn into(self) -> user_service::User {
+impl From<Users> for user_service::User {
+    fn from(user: Users) -> Self {
         user_service::User {
-            id: self.id as i32,
-            email: self.email.clone(),
-            password: Some(self.password.clone()),
-            active: self.active,
-            created_at: self.created_at.to_string(),
-            updated_at: self.updated_at.to_string(),
-            deleted_at: if let Some(deleted) = self.deleted_at.clone() {
-                Some(deleted.to_string())
-            } else {
-                None
-            },
+            id: user.id as i32,
+            email: user.email.clone(),
+            password: Some(user.password.clone()),
+            active: user.active,
+            created_at: user.created_at.to_string(),
+            updated_at: user.updated_at.to_string(),
+            deleted_at: user.deleted_at.clone().map(|d| d.to_string()),
         }
     }
 }
