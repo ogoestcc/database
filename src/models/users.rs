@@ -20,7 +20,7 @@ pub fn default_date() -> NaiveDateTime {
 #[cfg_attr(feature = "postgres", pg_mapper(table = "users"))]
 pub struct Users {
     #[serde(rename = "user_id")]
-    pub id: i64,
+    pub id: i32,
     #[serde(default)]
     email: String,
     #[serde(default)]
@@ -36,7 +36,7 @@ pub struct Users {
 
 impl Users {
     pub fn same_id(&self, id: i64) -> bool {
-        self.id == id
+        self.id == id as i32
     }
 
     pub fn same_email(&self, email: String) -> bool {
@@ -71,7 +71,7 @@ impl Users {
 impl Default for Users {
     fn default() -> Self {
         Users {
-            id: 0i64,
+            id: 0,
             email: "".into(),
             password: "".into(),
             active: true,

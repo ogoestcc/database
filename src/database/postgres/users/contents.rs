@@ -49,7 +49,7 @@ impl<'a> Database<UserContents> for PostgresDatabase {
 
         let statement = client.prepare(select.to_string().as_str()).await.unwrap();
 
-        let mut hash = HashMap::<i64, UserContents>::new();
+        let mut hash = HashMap::<i32, UserContents>::new();
 
         for row in &client.query(&statement, &[]).await.unwrap() {
             let (user, content) =

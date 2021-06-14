@@ -30,7 +30,7 @@ CREATE TABLE contents (
 DROP TABLE IF EXISTS users_contents;
 
 CREATE TABLE users_contents (
-    user_id bigint unsigned NOT NULL,
+    user_id bigint NOT NULL,
     content_id varchar(50) NOT NULL,
     relevance float4 NOT NULL DEFAULT 1.0,
     CONSTRAINT users_contents_pk PRIMARY KEY (user_id, content_id),
@@ -48,8 +48,8 @@ CREATE TABLE alerts (
     description text NOT NULL DEFAULT '' :: text,
     published_at timestamp(0) NOT NULL,
     updated_at timestamp(0) NOT NULL,
-    provider varchar(50) NOT NULL,
-    product varchar(50) NOT NULL,
+    provider varchar(100) NOT NULL,
+    product varchar(100) NOT NULL,
     CONSTRAINT alerts_pk PRIMARY KEY (id),
     CONSTRAINT alerts_fk_provider FOREIGN KEY (provider) REFERENCES contents(id),
     CONSTRAINT alerts_fk_product FOREIGN KEY (product) REFERENCES contents(id)
@@ -60,7 +60,7 @@ CREATE TABLE alerts (
 DROP TABLE IF EXISTS ratings;
 
 CREATE TABLE ratings (
-    user_id bigint unsigned NOT NULL,
+    user_id bigint NOT NULL,
     alert_id varchar(20) NOT NULL,
     "like" bool NOT NULL DEFAULT false,
     dislike bool NOT NULL DEFAULT false,

@@ -5,7 +5,7 @@ pub use csv::CSVDatabase;
 
 #[cfg(feature = "postgres")]
 pub use postgres::PostgresDatabase;
-use sea_query::query::QueryStatementBuilder;
+use sea_query::{ConditionalStatement, query::QueryStatementBuilder};
 
 use crate::error::{Error, Internal, StdError};
 
@@ -18,7 +18,7 @@ mod postgres;
 pub trait Wherable {
     #[cfg(feature = "postgres")]
     fn clause(&self) -> queler::clause::Clause;
-    fn conditions<'q, Q: QueryStatementBuilder>(&self, query_builder: &'q mut Q) -> &'q mut Q {
+    fn conditions<'q, Q: QueryStatementBuilder + ConditionalStatement>(&self, query_builder: &'q mut Q) -> &'q mut Q {
         query_builder
     }
 }

@@ -1,5 +1,6 @@
 #[cfg(feature = "postgres")]
 use queler::clause::Clause;
+use sea_query::Expr;
 
 use crate::{
     database::{Filter, Wherable},
@@ -38,6 +39,31 @@ impl Wherable for User {
         };
 
         queler::clause! { id, active, email }
+    }
+
+    #[cfg(feature = "postgres")]
+    fn conditions<'q, Q>(&self, query_builder: &'q mut Q) -> &'q mut Q
+    where
+        Q: sea_query::QueryStatementBuilder + sea_query::ConditionalStatement,
+    {
+        let query = match self.id {
+            Some(id) => query_builder.and_where(Expr::cust_with_values("id = ?", vec![id])),
+            None => query_builder,
+        };
+
+        let query = match &self.email {
+            Some(email) => {
+                query.and_where(Expr::cust_with_values("email = ?", vec![email.to_owned()]))
+            }
+            None => query,
+        };
+
+        let query = match self.active {
+            Some(active) => query.and_where(Expr::cust_with_values("active = ?", vec![active])),
+            None => query,
+        };
+
+        query
     }
 }
 

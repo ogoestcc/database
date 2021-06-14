@@ -8,7 +8,7 @@ use crate::services::types::contents::Content;
 #[repr(C)]
 #[derive(Default, Debug, Serialize, Deserialize, Clone)]
 #[cfg_attr(feature = "postgres", derive(PostgresMapper))]
-#[cfg_attr(feature = "postgres", pg_mapper(table = "alerts"))]
+#[cfg_attr(feature = "postgres", pg_mapper(table = "contents"))]
 pub struct Contents {
     pub id: String,
     description: Option<String>,
