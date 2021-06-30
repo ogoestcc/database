@@ -58,7 +58,7 @@ pub mod services {
                 pub type Output = Result<tonic::Response<Response>, tonic::Status>;
             }
 
-             pub mod delete {
+            pub mod delete {
                 pub use super::{operations::Delete as Request, users::User as Response};
 
                 pub type Input = tonic::Request<Request>;

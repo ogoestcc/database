@@ -1,5 +1,6 @@
 #[cfg(feature = "postgres")]
 use queler::clause::Clause;
+use sea_query::Expr;
 
 use crate::{
     database::{Filter, Wherable},
@@ -10,6 +11,8 @@ use crate::{
 pub struct Alert {
     pub id: Option<String>,
     pub content: Option<String>,
+    pub viewed: Option<bool>,
+    pub favorited: Option<bool>,
 }
 
 impl Wherable for Alert {
@@ -34,6 +37,19 @@ impl Wherable for Alert {
         } else {
             queler::clause! {}
         }
+    }
+
+    #[cfg(feature = "postgres")]
+    fn conditions<'q, Q>(&self, query_builder: &'q mut Q) -> &'q mut Q
+    where
+        Q: sea_query::QueryStatementBuilder + sea_query::ConditionalStatement,
+    {
+        if self.viewed.is_some() || self.favorited.is_some() {
+            if let Some(viewed) = self.viewed {}
+            if let Some(favorited) = self.favorited {}
+        }
+
+        query_builder
     }
 }
 

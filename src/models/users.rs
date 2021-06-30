@@ -15,9 +15,8 @@ pub fn default_date() -> NaiveDateTime {
 }
 
 #[repr(C)]
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[cfg_attr(feature = "postgres", derive(PostgresMapper))]
-#[cfg_attr(feature = "postgres", pg_mapper(table = "users"))]
+#[derive(Debug, Serialize, Deserialize, Clone, PostgresMapper)]
+#[pg_mapper(table = "users")]
 pub struct Users {
     #[serde(rename = "user_id")]
     pub id: i32,
@@ -65,6 +64,32 @@ impl Users {
     /// Set the users's password.
     pub fn set_password(&mut self, password: String) {
         self.password = password;
+    }
+
+    pub fn from_columns(
+        row: &tokio_postgres::row::Row,
+        cols: &[tokio_postgres::Column],
+        offset: Option<usize>,
+    ) -> Result<Self, tokio_postgres::Error> {
+        let mut user: Self = Default::default();
+
+        for (index, col) in cols.iter().enumerate() {
+            let name = col.name();
+            let index = offset.unwrap_or(0) + index;
+
+            match name {
+                "id" => user.id = row.try_get(index)?,
+                "email" => user.email = row.try_get(index)?,
+                "password" => user.password = row.try_get(index)?,
+                "active" => user.active = row.try_get(index)?,
+                "created_at" => user.created_at = row.try_get(index)?,
+                "updated_at" => user.updated_at = row.try_get(index)?,
+                "deleted_at" => user.deleted_at = row.try_get(index)?,
+                _ => {}
+            }
+        }
+
+        Ok(user)
     }
 }
 

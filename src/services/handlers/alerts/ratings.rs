@@ -20,6 +20,7 @@ pub async fn get<DB: traits::Alerts>(
             .map_or(Default::default(), |w| wherables::Alert {
                 id: w.id.clone(),
                 content: w.content,
+                ..Default::default()
             });
 
     let rating_where = request

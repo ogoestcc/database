@@ -17,6 +17,7 @@ pub async fn get<DB: traits::Alerts>(
         wherables::Alert {
             id: filters.id.clone(),
             content: filters.content.clone(),
+            ..Default::default()
         }
     } else {
         Default::default()

@@ -1,76 +1,78 @@
-use std::collections::HashMap;
+use sea_query::{Expr, Order, PostgresQueryBuilder, Query};
 
 use queler::{clause, select};
 use tokio_pg_mapper::FromTokioPostgresRow;
 
 use crate::{
-    database::{Database, PostgresDatabase, Wherable},
+    database::{
+        tables::{Contents, Table, Users, UsersContents},
+        Database, PostgresDatabase, Wherable,
+    },
     error::{Error, Internal},
-    models::{users::UserContents, Contents, Users},
+    models::{self, users::UserContents as Model},
 };
 
 #[async_trait::async_trait]
-impl<'a> Database<UserContents> for PostgresDatabase {
-    async fn get<W>(&self, _: W) -> Result<Vec<UserContents>, Error>
+impl<'a> Database<Model> for PostgresDatabase {
+    async fn get<W>(&self, _: W) -> Result<Vec<Model>, Error>
     where
         W: Wherable + Send + Sync,
     {
         let client = self.0.get().await.map_err(Internal::from)?;
 
-        let usr_fields = Users::sql_fields();
-        let con_fields = Contents::sql_fields();
+        let users_columns = Users::select_table();
 
-        let mut users_columns: Vec<_> = usr_fields
-            .split(',')
-            .map(|column| format!("usr.{}", column.trim()))
-            .collect();
-        let mut content_columns: Vec<_> = con_fields
-            .split(", ")
-            .map(|column| format!("con.{} AS con_{}", column.trim(), column.trim()))
-            .collect();
-
-        users_columns.append(&mut content_columns);
-
-        let select = select::SelectBuilder::new()
-            .select(&users_columns)
-            .from((Users::sql_table(), "usr"))
+        let select = Query::select()
+            .from(Users::Table)
+            .columns(users_columns.to_vec())
+            .columns(Contents::select_table().to_vec())
             .inner_join(
-                ("users_contents", "usco"),
-                clause! { "usco.user_id" => ":usr.id"},
+                UsersContents::Table,
+                Expr::tbl(UsersContents::Table, UsersContents::UserId)
+                    .equals(Users::Table, Users::Id),
             )
             .inner_join(
-                (Contents::sql_table(), "con"),
-                clause! { "con.id" => ":usco.content_id"},
+                Contents::Table,
+                Expr::tbl(UsersContents::Table, UsersContents::ContentId)
+                    .equals(Contents::Table, Contents::Id),
             )
-            // .r#where(r#where.clause())
-            .build();
+            .order_by((Users::Table, Users::Id), Order::Desc)
+            .to_string(PostgresQueryBuilder);
 
-        log::debug!("{}", select);
+        log::debug!("UserContents Query: {}", select);
 
-        let statement = client.prepare(select.to_string().as_str()).await.unwrap();
+        let statement = client
+            .prepare(select.as_str())
+            .await
+            .map_err(Internal::from)?;
 
-        let mut hash = HashMap::<i32, UserContents>::new();
+        let rows = &client
+            .query(&statement, &[])
+            .await
+            .map_err(Internal::from)?;
 
-        for row in &client.query(&statement, &[]).await.unwrap() {
-            let (user, content) =
-                super::deserializer::user_and_preferences(row, None, Some("con_"));
+        let mut users: Vec<Model> = vec![];
+        for row in rows {
+            let (users_columns, content_columns) = row.columns().split_at(users_columns.len());
 
-            if let Some(user_content) = hash.get_mut(&user.id) {
-                user_content.preferences.push(content);
-            } else {
-                hash.insert(
-                    user.id,
-                    UserContents {
-                        user,
-                        preferences: vec![content],
-                    },
-                );
+            let user =
+                models::Users::from_columns(row, users_columns, None).map_err(Internal::from)?;
+            let content =
+                models::Contents::from_columns(row, content_columns, Some(users_columns.len()))
+                    .map_err(Internal::from)?;
+
+            match users.last_mut() {
+                Some(u) if u.user.id == user.id => u.preferences.push(content),
+                _ => users.push(Model {
+                    user,
+                    preferences: vec![content],
+                }),
             }
         }
 
-        Ok(hash.values().map(|v| v.to_owned()).collect())
+        Ok(users)
     }
-    // async fn get<W>(&self, r#where: W) -> Vec<UserContents>
+    // async fn get<W>(&self, r#where: W) -> Vec<Model>
     // where
     //     W: Wherable + Filter<Users> + Send + Sync,
     // {
