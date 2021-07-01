@@ -4,6 +4,7 @@ pub mod types;
 pub mod users;
 
 mod handlers;
+pub mod models;
 
 pub use alerts::AlertsService;
 pub use ratings::RatingsService;
@@ -127,12 +128,13 @@ pub mod services {
 }
 
 mod traits {
+    use super::models::{self as service_models, users};
     use crate::{database::Database, models};
 
     pub trait Users:
-        Database<models::Users>
-        + Database<models::UserRatings>
-        + Database<models::UserContents>
+        Database<users::User>
+        + Database<service_models::UsersRatings>
+        + Database<service_models::UsersContents>
         + Send
         + Sync
     where
@@ -140,9 +142,9 @@ mod traits {
     {
     }
     impl<T> Users for T where
-        T: Database<models::Users>
-            + Database<models::UserRatings>
-            + Database<models::UserContents>
+        T: Database<users::User>
+            + Database<service_models::UsersRatings>
+            + Database<service_models::UsersContents>
             + Send
             + Sync
     {

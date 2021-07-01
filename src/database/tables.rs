@@ -9,6 +9,7 @@ pub trait Table: Sized {
 #[iden = "alerts"] // table name
 pub enum Alerts {
     Table,
+    Id,
     CvssScore,
     Description,
     PublishedAt,

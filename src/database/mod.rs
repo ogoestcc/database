@@ -38,7 +38,7 @@ where
 {
     async fn get<W>(&self, r#where: W) -> Result<Vec<Model>, Error>
     where
-        W: Wherable + Filter<Model> + Send + Sync;
+        W: Wherable + Send + Sync;
 
     async fn create(&self, _: Model) -> Result<Model, Error> {
         Err(StdError("Unimplemented".to_owned())).map_err(Internal::from)?

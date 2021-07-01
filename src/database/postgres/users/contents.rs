@@ -1,7 +1,4 @@
-use sea_query::{Expr, Order, PostgresQueryBuilder, Query};
-
-use queler::{clause, select};
-use tokio_pg_mapper::FromTokioPostgresRow;
+use sea_query::{Expr, Func, Order, PostgresQueryBuilder, Query};
 
 use crate::{
     database::{
@@ -9,22 +6,28 @@ use crate::{
         Database, PostgresDatabase, Wherable,
     },
     error::{Error, Internal},
-    models::{self, users::UserContents as Model},
+    services::models::{contents::Content, users::User, UsersContents as Model},
 };
 
-#[async_trait::async_trait]
-impl<'a> Database<Model> for PostgresDatabase {
-    async fn get<W>(&self, _: W) -> Result<Vec<Model>, Error>
-    where
-        W: Wherable + Send + Sync,
-    {
-        let client = self.0.get().await.map_err(Internal::from)?;
-
-        let users_columns = Users::select_table();
-
-        let select = Query::select()
+lazy_static::lazy_static! {
+    static ref USERS_CONTENTS_COUNT: String = Query::select()
             .from(Users::Table)
-            .columns(users_columns.to_vec())
+            .expr(Func::count(Expr::cust(r#"distinct "users"."id""#)))
+            .inner_join(
+                UsersContents::Table,
+                Expr::tbl(UsersContents::Table, UsersContents::UserId)
+                    .equals(Users::Table, Users::Id),
+            )
+            .inner_join(
+                Contents::Table,
+                Expr::tbl(UsersContents::Table, UsersContents::ContentId)
+                    .equals(Contents::Table, Contents::Id),
+            )
+            .to_string(PostgresQueryBuilder);
+
+    static ref USERS_CONTENTS_SELECT: String = Query::select()
+            .from(Users::Table)
+            .columns(Users::select_table().to_vec())
             .columns(Contents::select_table().to_vec())
             .inner_join(
                 UsersContents::Table,
@@ -38,11 +41,34 @@ impl<'a> Database<Model> for PostgresDatabase {
             )
             .order_by((Users::Table, Users::Id), Order::Desc)
             .to_string(PostgresQueryBuilder);
+}
 
-        log::debug!("UserContents Query: {}", select);
+#[async_trait::async_trait]
+impl<'a> Database<Model> for PostgresDatabase {
+    async fn get<W>(&self, _: W) -> Result<Vec<Model>, Error>
+    where
+        W: Wherable + Send + Sync,
+    {
+        let client = self.0.get().await.map_err(Internal::from)?;
+
+        let users_columns = Users::select_table();
+
+        let count_stmt = client
+            .prepare(USERS_CONTENTS_COUNT.as_str())
+            .await
+            .map_err(Internal::from)?;
+
+        let count = match client.query_one(&count_stmt, &[]).await {
+            Err(err) => return Err(Internal::from(err).into()),
+            Ok(row) => match row.try_get::<usize, i64>(0) {
+                Ok(count) if count == 0 => return Ok(vec![]),
+                Ok(count) => count,
+                Err(err) => return Err(Internal::from(err).into()),
+            },
+        };
 
         let statement = client
-            .prepare(select.as_str())
+            .prepare(USERS_CONTENTS_SELECT.as_str())
             .await
             .map_err(Internal::from)?;
 
@@ -51,15 +77,14 @@ impl<'a> Database<Model> for PostgresDatabase {
             .await
             .map_err(Internal::from)?;
 
-        let mut users: Vec<Model> = vec![];
+        let mut users: Vec<Model> = Vec::with_capacity(count as usize);
         for row in rows {
             let (users_columns, content_columns) = row.columns().split_at(users_columns.len());
 
-            let user =
-                models::Users::from_columns(row, users_columns, None).map_err(Internal::from)?;
-            let content =
-                models::Contents::from_columns(row, content_columns, Some(users_columns.len()))
-                    .map_err(Internal::from)?;
+            let user = User::from_columns(row, users_columns, None).map_err(Internal::from)?;
+
+            let content = Content::from_columns(row, content_columns, Some(users_columns.len()))
+                .map_err(Internal::from)?;
 
             match users.last_mut() {
                 Some(u) if u.user.id == user.id => u.preferences.push(content),
@@ -72,52 +97,4 @@ impl<'a> Database<Model> for PostgresDatabase {
 
         Ok(users)
     }
-    // async fn get<W>(&self, r#where: W) -> Vec<Model>
-    // where
-    //     W: Wherable + Filter<Users> + Send + Sync,
-    // {
-    //     // let client = self.0.get().await.unwrap();
-
-    //     // let rating_where = wherables::Rating {
-    //     //     user_id: Some(r#":usr.id"#.to_string()),
-    //     //     ..Default::default()
-    //     // };
-
-    //     // let select = queler::select::SelectBuilder::new()
-    //     //     .from((Users::sql_table(), "usr"))
-    //     //     .inner_join((Ratings::sql_table(), "rat"), rating_where.clause())
-    //     //     .r#where(r#where.clause())
-    //     //     .build();
-
-    //     // log::debug!("{}", select);
-
-    //     // let statement = client.prepare(select.to_string().as_str()).await.unwrap();
-
-    //     // let mut hash = HashMap::<i64, UsersContents>::new();
-
-    //     // for row in &client.query(&statement, &[]).await.unwrap() {
-    //     //     let rating = Ratings::from_row_ref(row).unwrap();
-
-    //     //     let user = Users::from_row_ref(row).unwrap();
-
-    //     //     if let Some(user_rating) = hash.get_mut(&user.id) {
-    //     //         user_rating.ratings.push(rating);
-    //     //     } else {
-    //     //         hash.insert(
-    //     //             user.id,
-    //     //             UsersContents {
-    //     //                 user,
-    //     //                 ratings: vec![rating],
-    //     //             },
-    //     //         );
-    //     //     }
-    //     // }
-
-    //     // let mut ratings = vec![];
-    //     // for (_, rating) in hash {
-    //     //     ratings.push(rating);
-    //     // }
-    //     // ratings
-    //     todo!()
-    // }
 }

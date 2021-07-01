@@ -1,4 +1,4 @@
-use sea_query::{Order, PostgresQueryBuilder, Query};
+use sea_query::{Order, PostgresDriver, PostgresQueryBuilder, Query};
 
 mod deserializer;
 
@@ -12,13 +12,13 @@ use crate::{
         tables::{Table, Users},
         Wherable,
     },
-    error::{Error, Internal, StdError},
-    models::Users as Model,
+    error::{Error, Internal},
+    services::models::users::User,
 };
 
 #[async_trait::async_trait]
-impl Database<Model> for PostgresDatabase {
-    async fn get<W>(&self, r#where: W) -> Result<Vec<Model>, Error>
+impl Database<User> for PostgresDatabase {
+    async fn get<W>(&self, r#where: W) -> Result<Vec<User>, Error>
     where
         W: Wherable + Send + Sync,
     {
@@ -37,34 +37,35 @@ impl Database<Model> for PostgresDatabase {
             .await
             .map_err(Internal::from)?;
 
-        Ok(client
+        let rows = client
             .query(&statement, &[])
             .await
-            .map_err(Internal::from)?
-            .iter()
-            .map(|row| deserializer::user(row, None))
-            .collect())
+            .map_err(Internal::from)?;
+
+        let mut users = Vec::<User>::with_capacity(rows.len());
+        for row in &rows {
+            users.push(User::from_row(row).map_err(Internal::from)?)
+        }
+
+        Ok(users)
     }
 
-    async fn create(&self, user: Model) -> Result<Model, Error> {
+    async fn create(&self, user: User) -> Result<User, Error> {
         let client = self.0.get().await.map_err(Internal::from)?;
 
-        let insert = Query::insert()
+        let (sql, values) = Query::insert()
             .into_table(Users::Table)
             .returning(Query::select().columns(Users::select().to_vec()).take())
             .columns(vec![Users::Email, Users::Password])
-            .values(vec![user.email().into(), user.password().into()])
+            .values(vec![user.email.into(), user.password.into()])
             .map_err(Internal::from)?
-            .to_string(PostgresQueryBuilder);
+            .build(PostgresQueryBuilder);
 
-        client
-            .query(insert.as_str(), &[])
+        let inserted_row = client
+            .query_one(sql.as_str(), &values.as_params())
             .await
-            .map_err(Internal::from)?
-            .first()
-            .map_or_else(
-                || Err(Internal::from(StdError("User not created".to_owned())).into()),
-                |row| Ok(deserializer::user(row, None)),
-            )
+            .map_err(Internal::from)?;
+
+        Ok(User::from_row(&inserted_row).map_err(Internal::from)?)
     }
 }

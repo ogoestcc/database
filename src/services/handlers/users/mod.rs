@@ -2,10 +2,7 @@ use std::sync::Arc;
 
 use service::operations::create;
 
-use crate::{
-    models::{self, wherables},
-    services::{services::users as service, traits, types::users as types},
-};
+use crate::services::{models::users, services::users as service, traits};
 
 pub mod contents;
 pub mod ratings;
@@ -16,17 +13,9 @@ pub async fn get<DB: traits::Users>(
 ) -> Result<service::Response, tonic::Status> {
     log::debug!("Request {:?}", request);
 
-    let r#where = request
-        .r#where
-        .clone()
-        .map_or(Default::default(), |w| wherables::User {
-            id: w.id,
-            active: w.active,
-            email: w.email,
-        });
-
-    let users: Vec<models::Users> = db_connection.get(r#where).await?;
-    let users: Vec<types::User> = users.iter().map(From::from).collect();
+    let users: Vec<users::User> = db_connection
+        .get(request.r#where.clone().unwrap_or(Default::default()))
+        .await?;
 
     Ok(service::Response {
         metadata: service::Metadata {
@@ -45,9 +34,9 @@ pub async fn create<DB: traits::Users>(
 
     let create::Request { user } = request;
 
-    let mut new_user = models::Users::default();
-    new_user.set_email(user.email.unwrap());
-    new_user.set_password(user.password.unwrap());
+    let mut new_user = users::User::default();
+    new_user.email = user.email.unwrap();
+    new_user.password = user.password;
 
     Ok(db_connection.create(new_user).await?.into())
 }
