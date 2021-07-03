@@ -131,7 +131,7 @@ mod traits {
     use super::models::{self as service_models, users};
     use crate::services::protos::types::AlertWhereClause;
     use crate::services::protos::types::RatingWhereClause;
-    use crate::{database::Database, models, services::protos::types::UserWhereClause};
+    use crate::{database::Database, services::protos::types::UserWhereClause};
 
     pub trait Users:
         Database<users::User, WhereClause = UserWhereClause>

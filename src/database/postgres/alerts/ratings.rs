@@ -1,8 +1,5 @@
-use std::collections::HashMap;
-
 use super::{Database, PostgresDatabase};
 use sea_query::{Expr, Func, Order, PostgresQueryBuilder, Query};
-use tokio_pg_mapper::FromTokioPostgresRow;
 
 use crate::{
     database::{
@@ -10,7 +7,6 @@ use crate::{
         Wherable,
     },
     error::{Error, Internal},
-    models::{alerts::AlertRatings, wherables, Alerts, Ratings},
     services::models::{
         alerts::{Alert, AlertWhereClause},
         ratings::Rating,

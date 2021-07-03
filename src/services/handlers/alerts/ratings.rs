@@ -1,9 +1,6 @@
 use std::sync::Arc;
 
-use crate::{
-    models,
-    services::{services::alerts::ratings as service, traits},
-};
+use crate::services::{services::alerts::ratings as service, traits};
 
 pub async fn get<DB: traits::Alerts>(
     db_connection: Arc<DB>,
