@@ -154,7 +154,7 @@ mod traits {
 
     pub trait Alerts:
         Database<service_models::alerts::Alert, WhereClause = AlertWhereClause>
-        + Database<models::AlertRatings, WhereClause = AlertWhereClause>
+        + Database<service_models::AlertsRatings, WhereClause = AlertWhereClause>
         + Send
         + Sync
     where
@@ -163,7 +163,7 @@ mod traits {
     }
     impl<T> Alerts for T where
         T: Database<service_models::alerts::Alert, WhereClause = AlertWhereClause>
-            + Database<models::AlertRatings, WhereClause = AlertWhereClause>
+            + Database<service_models::AlertsRatings, WhereClause = AlertWhereClause>
             + Send
             + Sync
     {
