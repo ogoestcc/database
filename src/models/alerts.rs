@@ -66,6 +66,7 @@ impl From<&Alerts> for alert_service::Alert {
             published_at: alert.published_at.to_string(),
             updated_at: alert.updated_at.to_string(),
             description: alert.description.clone(),
+            ..Default::default()
         }
     }
 }

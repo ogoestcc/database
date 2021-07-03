@@ -21,6 +21,7 @@ pub enum Alerts {
 impl Table for Alerts {
     fn select() -> &'static [Self] {
         &[
+            Self::Id,
             Self::CvssScore,
             Self::Description,
             Self::PublishedAt,
@@ -32,6 +33,7 @@ impl Table for Alerts {
 
     fn select_table() -> &'static [(Self, Self)] {
         &[
+            (Self::Table, Self::Id),
             (Self::Table, Self::CvssScore),
             (Self::Table, Self::Description),
             (Self::Table, Self::PublishedAt),
@@ -96,6 +98,19 @@ impl Table for Users {
             (Self::Table, Self::Id),
             (Self::Table, Self::Email),
             (Self::Table, Self::Password),
+            (Self::Table, Self::Active),
+            (Self::Table, Self::CreatedAt),
+            (Self::Table, Self::UpdatedAt),
+            (Self::Table, Self::DeletedAt),
+        ]
+    }
+}
+
+impl Users {
+    pub fn select_without_password() -> &'static [(Self, Self)] {
+        &[
+            (Self::Table, Self::Id),
+            (Self::Table, Self::Email),
             (Self::Table, Self::Active),
             (Self::Table, Self::CreatedAt),
             (Self::Table, Self::UpdatedAt),

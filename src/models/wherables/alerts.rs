@@ -1,6 +1,5 @@
 #[cfg(feature = "postgres")]
 use queler::clause::Clause;
-use sea_query::Expr;
 
 use crate::{
     database::{Filter, Wherable},
@@ -44,11 +43,6 @@ impl Wherable for Alert {
     where
         Q: sea_query::QueryStatementBuilder + sea_query::ConditionalStatement,
     {
-        if self.viewed.is_some() || self.favorited.is_some() {
-            if let Some(viewed) = self.viewed {}
-            if let Some(favorited) = self.favorited {}
-        }
-
         query_builder
     }
 }

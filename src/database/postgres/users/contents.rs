@@ -3,10 +3,14 @@ use sea_query::{Expr, Func, Order, PostgresQueryBuilder, Query};
 use crate::{
     database::{
         tables::{Contents, Table, Users, UsersContents},
-        Database, PostgresDatabase, Wherable,
+        Database, PostgresDatabase,
     },
     error::{Error, Internal},
-    services::models::{contents::Content, users::User, UsersContents as Model},
+    services::models::{
+        contents::Content,
+        users::{User, UserWhereClause},
+        UsersContents as Model,
+    },
 };
 
 lazy_static::lazy_static! {
@@ -45,20 +49,18 @@ lazy_static::lazy_static! {
 
 #[async_trait::async_trait]
 impl<'a> Database<Model> for PostgresDatabase {
-    async fn get<W>(&self, _: W) -> Result<Vec<Model>, Error>
-    where
-        W: Wherable + Send + Sync,
-    {
+    type WhereClause = UserWhereClause;
+    async fn get(&self, _: Self::WhereClause) -> Result<Vec<Model>, Error> {
         let client = self.0.get().await.map_err(Internal::from)?;
 
         let users_columns = Users::select_table();
 
-        let count_stmt = client
-            .prepare(USERS_CONTENTS_COUNT.as_str())
-            .await
-            .map_err(Internal::from)?;
+        let (count, query) = futures::join!(
+            client.query_one(USERS_CONTENTS_COUNT.as_str(), &[]),
+            client.query(USERS_CONTENTS_SELECT.as_str(), &[])
+        );
 
-        let count = match client.query_one(&count_stmt, &[]).await {
+        let count = match count {
             Err(err) => return Err(Internal::from(err).into()),
             Ok(row) => match row.try_get::<usize, i64>(0) {
                 Ok(count) if count == 0 => return Ok(vec![]),
@@ -67,24 +69,19 @@ impl<'a> Database<Model> for PostgresDatabase {
             },
         };
 
-        let statement = client
-            .prepare(USERS_CONTENTS_SELECT.as_str())
-            .await
-            .map_err(Internal::from)?;
-
-        let rows = &client
-            .query(&statement, &[])
-            .await
-            .map_err(Internal::from)?;
+        let rows = &query.map_err(Internal::from)?;
 
         let mut users: Vec<Model> = Vec::with_capacity(count as usize);
         for row in rows {
             let (users_columns, content_columns) = row.columns().split_at(users_columns.len());
 
-            let user = User::from_columns(row, users_columns, None).map_err(Internal::from)?;
+            let (user, content) = futures::join!(
+                User::from_columns(row, users_columns, None),
+                Content::from_columns(row, content_columns, Some(users_columns.len()))
+            );
 
-            let content = Content::from_columns(row, content_columns, Some(users_columns.len()))
-                .map_err(Internal::from)?;
+            let user = user.map_err(Internal::from)?;
+            let content = content.map_err(Internal::from)?;
 
             match users.last_mut() {
                 Some(u) if u.user.id == user.id => u.preferences.push(content),

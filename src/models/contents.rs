@@ -14,30 +14,6 @@ pub struct Contents {
     is_product: bool,
 }
 
-impl Contents {
-    pub fn from_columns(
-        row: &tokio_postgres::row::Row,
-        cols: &[tokio_postgres::Column],
-        offset: Option<usize>,
-    ) -> Result<Self, tokio_postgres::Error> {
-        let mut content: Self = Default::default();
-
-        for (index, col) in cols.iter().enumerate() {
-            let name = col.name();
-            let index = offset.unwrap_or(0) + index;
-
-            match name {
-                "id" => content.id = row.try_get(index)?,
-                "description" => content.description = row.try_get(index)?,
-                "is_product" => content.is_product = row.try_get(index)?,
-                _ => {}
-            }
-        }
-
-        Ok(content)
-    }
-}
-
 impl From<Contents> for Content {
     fn from(cnt: Contents) -> Self {
         Content {

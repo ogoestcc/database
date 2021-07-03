@@ -7,14 +7,13 @@ use crate::{
     database::Wherable,
     error::{Error, Internal},
     models::{alerts::AlertRatings, wherables, Alerts, Ratings},
+    services::models::alerts::AlertWhereClause,
 };
 
 #[async_trait::async_trait]
 impl Database<AlertRatings> for PostgresDatabase {
-    async fn get<W>(&self, r#where: W) -> Result<Vec<AlertRatings>, Error>
-    where
-        W: Wherable + Send + Sync,
-    {
+    type WhereClause = AlertWhereClause;
+    async fn get(&self, r#where: Self::WhereClause) -> Result<Vec<AlertRatings>, Error> {
         let client = self.0.get().await.map_err(Internal::from)?;
 
         let rating_where = wherables::Rating {

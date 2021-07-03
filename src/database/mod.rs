@@ -35,10 +35,11 @@ pub trait Filter<M> {
 pub trait Database<Model>
 where
     Model: Send + 'static,
+    Self::WhereClause: Wherable + Send + Sync,
 {
-    async fn get<W>(&self, r#where: W) -> Result<Vec<Model>, Error>
-    where
-        W: Wherable + Send + Sync;
+    type WhereClause;
+
+    async fn get(&self, r#where: Self::WhereClause) -> Result<Vec<Model>, Error>;
 
     async fn create(&self, _: Model) -> Result<Model, Error> {
         Err(StdError("Unimplemented".to_owned())).map_err(Internal::from)?

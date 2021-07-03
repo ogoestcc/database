@@ -11,7 +11,7 @@ pub mod users {
 }
 
 pub mod alerts {
-    pub use super::types::{Alert, AlertWhereClause as WhereClause};
+    pub use super::types::{alert_where_clause, Alert, AlertWhereClause as WhereClause};
 
     impl<T: Into<Alert> + Clone> From<&T> for Alert {
         fn from(base: &T) -> Self {

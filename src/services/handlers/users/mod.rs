@@ -14,7 +14,7 @@ pub async fn get<DB: traits::Users>(
     log::debug!("Request {:?}", request);
 
     let users: Vec<users::User> = db_connection
-        .get(request.r#where.clone().unwrap_or(Default::default()))
+        .get(request.r#where.clone().unwrap_or_default())
         .await?;
 
     Ok(service::Response {
@@ -34,9 +34,10 @@ pub async fn create<DB: traits::Users>(
 
     let create::Request { user } = request;
 
-    let mut new_user = users::User::default();
-    new_user.email = user.email.unwrap();
-    new_user.password = user.password;
-
-    Ok(db_connection.create(new_user).await?.into())
+    let new_user = users::User {
+        email: user.email.unwrap(),
+        password: user.password,
+        ..Default::default()
+    };
+    Ok(db_connection.create(new_user).await?)
 }

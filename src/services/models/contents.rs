@@ -1,19 +1,9 @@
 use tokio_postgres::{Column, Error, Row};
 
 pub use super::types::Content;
-use crate::database::{tables, Wherable};
 
 impl Content {
-    pub fn from_row(row: &Row) -> Result<Self, Error> {
-        Ok(Self {
-            id: row.try_get("id")?,
-            description: row.try_get("description")?,
-            active: row.try_get("active")?,
-            is_product: row.try_get("is_product")?,
-        })
-    }
-
-    pub fn from_columns(
+    pub async fn from_columns(
         row: &Row,
         columns: &[Column],
         offset: Option<usize>,

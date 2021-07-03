@@ -1,7 +1,5 @@
 use sea_query::{Order, PostgresDriver, PostgresQueryBuilder, Query};
 
-mod deserializer;
-
 mod contents;
 mod ratings;
 
@@ -13,15 +11,14 @@ use crate::{
         Wherable,
     },
     error::{Error, Internal},
-    services::models::users::User,
+    services::models::users::{User, UserWhereClause},
 };
 
 #[async_trait::async_trait]
 impl Database<User> for PostgresDatabase {
-    async fn get<W>(&self, r#where: W) -> Result<Vec<User>, Error>
-    where
-        W: Wherable + Send + Sync,
-    {
+    type WhereClause = UserWhereClause;
+
+    async fn get(&self, r#where: Self::WhereClause) -> Result<Vec<User>, Error> {
         let client = self.0.get().await.map_err(Internal::from)?;
 
         let select = r#where
@@ -32,13 +29,8 @@ impl Database<User> for PostgresDatabase {
 
         log::debug!("USER SQL QUERY: {}", select);
 
-        let statement = client
-            .prepare(select.as_str())
-            .await
-            .map_err(Internal::from)?;
-
         let rows = client
-            .query(&statement, &[])
+            .query(select.as_str(), &[])
             .await
             .map_err(Internal::from)?;
 

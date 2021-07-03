@@ -1,24 +1,14 @@
 use chrono::NaiveDateTime;
+use sea_query::Expr;
+use tables::Ratings::{AlertId, Critical, Dislike, Like, UserId};
 use tokio_postgres::{Column, Error, Row};
 
-pub use super::types::Rating;
+use crate::database::{tables, Wherable};
+
+pub use super::types::{Rating, RatingWhereClause};
 
 impl Rating {
-    pub fn from_row(row: &Row) -> Result<Self, Error> {
-        Ok(Self {
-            user_id: row.try_get::<&str, i64>("user_id")? as i32,
-            alert_id: row.try_get("alert_id")?,
-            like: row.try_get("like")?,
-            dislike: row.try_get("dislike")?,
-            critical: row.try_get("critical")?,
-            created_at: row
-                .try_get::<&str, NaiveDateTime>("created_at")?
-                .to_string(),
-            ..Default::default()
-        })
-    }
-
-    pub fn from_columns(
+    pub async fn from_columns(
         row: &Row,
         columns: &[Column],
         offset: Option<usize>,
@@ -43,5 +33,43 @@ impl Rating {
         }
 
         Ok(rating)
+    }
+}
+
+impl Wherable for RatingWhereClause {
+    fn conditions<'q, Q: sea_query::QueryStatementBuilder + sea_query::ConditionalStatement>(
+        &self,
+        query_builder: &'q mut Q,
+    ) -> &'q mut Q {
+        let query = match self.user_id {
+            Some(id) => query_builder.and_where(Expr::col(UserId).eq(id)),
+            None => query_builder,
+        };
+
+        let query = match self.alert_id.clone() {
+            Some(id) => query.and_where(Expr::col(AlertId).eq(id)),
+            None => query,
+        };
+
+        let query = match self.like {
+            Some(like) => query.and_where(Expr::col(Like).eq(like)),
+            None => query,
+        };
+
+        let query = match self.dislike {
+            Some(dislike) => query.and_where(Expr::col(Dislike).eq(dislike)),
+            None => query,
+        };
+
+        let query = match self.critical {
+            Some(critical) => query.and_where(Expr::col(Critical).eq(critical)),
+            None => query,
+        };
+
+        query
+    }
+
+    fn clause(&self) -> queler::clause::Clause {
+        todo!()
     }
 }

@@ -24,7 +24,7 @@ impl User {
         })
     }
 
-    pub fn from_columns(
+    pub async fn from_columns(
         row: &Row,
         columns: &[Column],
         offset: Option<usize>,
@@ -86,7 +86,7 @@ impl Wherable for UserWhereClause {
 }
 
 impl Filter<User> for UserWhereClause {
-    fn filter(&self, value: &User) -> bool {
+    fn filter(&self, _: &User) -> bool {
         todo!()
     }
 }

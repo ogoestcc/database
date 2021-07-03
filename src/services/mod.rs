@@ -129,12 +129,14 @@ pub mod services {
 
 mod traits {
     use super::models::{self as service_models, users};
-    use crate::{database::Database, models};
+    use crate::services::protos::types::AlertWhereClause;
+    use crate::services::protos::types::RatingWhereClause;
+    use crate::{database::Database, models, services::protos::types::UserWhereClause};
 
     pub trait Users:
-        Database<users::User>
-        + Database<service_models::UsersRatings>
-        + Database<service_models::UsersContents>
+        Database<users::User, WhereClause = UserWhereClause>
+        + Database<service_models::UsersRatings, WhereClause = UserWhereClause>
+        + Database<service_models::UsersContents, WhereClause = UserWhereClause>
         + Send
         + Sync
     where
@@ -142,27 +144,39 @@ mod traits {
     {
     }
     impl<T> Users for T where
-        T: Database<users::User>
-            + Database<service_models::UsersRatings>
-            + Database<service_models::UsersContents>
+        T: Database<users::User, WhereClause = UserWhereClause>
+            + Database<service_models::UsersRatings, WhereClause = UserWhereClause>
+            + Database<service_models::UsersContents, WhereClause = UserWhereClause>
             + Send
             + Sync
     {
     }
 
     pub trait Alerts:
-        Database<models::Alerts> + Database<models::AlertRatings> + Send + Sync
+        Database<service_models::alerts::Alert, WhereClause = AlertWhereClause>
+        + Database<models::AlertRatings, WhereClause = AlertWhereClause>
+        + Send
+        + Sync
     where
         Self: std::marker::Sized,
     {
     }
-    impl<T> Alerts for T where T: Database<models::Alerts> + Database<models::AlertRatings> + Send + Sync
-    {}
+    impl<T> Alerts for T where
+        T: Database<service_models::alerts::Alert, WhereClause = AlertWhereClause>
+            + Database<models::AlertRatings, WhereClause = AlertWhereClause>
+            + Send
+            + Sync
+    {
+    }
 
-    pub trait Ratings: Database<models::Ratings> + Send + Sync
+    pub trait Ratings:
+        Database<service_models::ratings::Rating, WhereClause = RatingWhereClause> + Send + Sync
     where
         Self: std::marker::Sized,
     {
     }
-    impl<T> Ratings for T where T: Database<models::Ratings> + Send + Sync {}
+    impl<T> Ratings for T where
+        T: Database<service_models::ratings::Rating, WhereClause = RatingWhereClause> + Send + Sync
+    {
+    }
 }

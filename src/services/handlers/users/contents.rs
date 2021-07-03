@@ -10,9 +10,7 @@ pub async fn get<DB: traits::Users>(
 
     let r#where = request.r#where.clone();
 
-    let users: Vec<models::UsersContents> = db_connection
-        .get(r#where.unwrap_or(Default::default()))
-        .await?;
+    let users: Vec<models::UsersContents> = db_connection.get(r#where.unwrap_or_default()).await?;
 
     Ok(service::Response {
         metadata: service::Metadata {

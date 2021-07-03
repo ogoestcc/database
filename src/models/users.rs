@@ -45,52 +45,6 @@ impl Users {
     pub fn is_active(&self) -> bool {
         self.active
     }
-
-    /// Get a reference to the users's email.
-    pub fn email(&self) -> &str {
-        self.email.as_str()
-    }
-
-    /// Get a reference to the users's password.
-    pub fn password(&self) -> &str {
-        self.password.as_str()
-    }
-
-    /// Set the users's email.
-    pub fn set_email(&mut self, email: String) {
-        self.email = email;
-    }
-
-    /// Set the users's password.
-    pub fn set_password(&mut self, password: String) {
-        self.password = password;
-    }
-
-    pub fn from_columns(
-        row: &tokio_postgres::row::Row,
-        cols: &[tokio_postgres::Column],
-        offset: Option<usize>,
-    ) -> Result<Self, tokio_postgres::Error> {
-        let mut user: Self = Default::default();
-
-        for (index, col) in cols.iter().enumerate() {
-            let name = col.name();
-            let index = offset.unwrap_or(0) + index;
-
-            match name {
-                "id" => user.id = row.try_get(index)?,
-                "email" => user.email = row.try_get(index)?,
-                "password" => user.password = row.try_get(index)?,
-                "active" => user.active = row.try_get(index)?,
-                "created_at" => user.created_at = row.try_get(index)?,
-                "updated_at" => user.updated_at = row.try_get(index)?,
-                "deleted_at" => user.deleted_at = row.try_get(index)?,
-                _ => {}
-            }
-        }
-
-        Ok(user)
-    }
 }
 
 impl Default for Users {
@@ -147,7 +101,7 @@ impl From<Users> for user_service::User {
             active: user.active,
             created_at: user.created_at.to_string(),
             updated_at: user.updated_at.to_string(),
-            deleted_at: user.deleted_at.clone().map(|d| d.to_string()),
+            deleted_at: user.deleted_at.map(|d| d.to_string()),
         }
     }
 }

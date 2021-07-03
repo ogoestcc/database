@@ -1,52 +1,69 @@
 use chrono::NaiveDateTime;
+use sea_query::Expr;
 use tokio_postgres::{row::Row, Column, Error};
 
-pub use super::types::{Alert, AlertWhereClause};
+use crate::database::{tables, Wherable};
+
+pub use super::types::{alert_where_clause::View, Alert, AlertWhereClause};
 
 impl Alert {
-    pub fn from_row(row: &Row) -> Result<Self, Error> {
-        Ok(Self {
-            id: row.try_get("id")?,
-            cvss_score: row.try_get("cvss_score")?,
-            provider: row.try_get("provider")?,
-            product: row.try_get("product")?,
-            description: row.try_get("description")?,
-            published_at: row
-                .try_get::<&str, NaiveDateTime>("published_at")?
-                .to_string(),
-            updated_at: row
-                .try_get::<&str, NaiveDateTime>("updated_at")?
-                .to_string(),
-        })
-    }
-
-    pub fn from_columns(
+    pub async fn from_columns(
         row: &Row,
         columns: &[Column],
         offset: Option<usize>,
     ) -> Result<Self, Error> {
-        let mut user: Self = Default::default();
+        let mut alert: Self = Default::default();
 
         for (index, col) in columns.iter().enumerate() {
             let name = col.name();
             let index = offset.unwrap_or(0) + index;
 
             match name {
-                "id" => user.id = row.try_get(index)?,
-                "cvss_score" => user.cvss_score = row.try_get(index)?,
-                "product" => user.product = row.try_get(index)?,
-                "provider" => user.provider = row.try_get(index)?,
-                "description" => user.description = row.try_get(index)?,
+                "id" => alert.id = row.try_get(index)?,
+                "cvss_score" => alert.cvss_score = row.try_get(index)?,
+                "product" => alert.product = row.try_get(index)?,
+                "provider" => alert.provider = row.try_get(index)?,
+                "description" => alert.description = row.try_get(index)?,
                 "published_at" => {
-                    user.published_at = row.try_get::<usize, NaiveDateTime>(index)?.to_string()
+                    alert.published_at = row.try_get::<usize, NaiveDateTime>(index)?.to_string()
                 }
                 "updated_at" => {
-                    user.updated_at = row.try_get::<usize, NaiveDateTime>(index)?.to_string()
+                    alert.updated_at = row.try_get::<usize, NaiveDateTime>(index)?.to_string()
                 }
+                "favorited" => alert.starred = row.try_get(index)?,
+                "starred" => alert.starred = row.try_get(index)?,
                 _ => {}
             }
         }
 
-        Ok(user)
+        Ok(alert)
+    }
+}
+
+impl Wherable for AlertWhereClause {
+    fn clause(&self) -> queler::clause::Clause {
+        todo!()
+    }
+
+    fn conditions<'q, Q: sea_query::QueryStatementBuilder + sea_query::ConditionalStatement>(
+        &self,
+        query_builder: &'q mut Q,
+    ) -> &'q mut Q {
+        let query = match self.id.clone() {
+            Some(id) => query_builder
+                .and_where(Expr::col((tables::Alerts::Table, tables::Alerts::Id)).eq(id)),
+            None => query_builder,
+        };
+
+        let query = match self.content.clone() {
+            Some(content) => query.and_where(
+                Expr::col((tables::Alerts::Table, tables::Alerts::Product))
+                    .eq(content.clone())
+                    .or(Expr::col((tables::Alerts::Table, tables::Alerts::Product)).eq(content)),
+            ),
+            None => query,
+        };
+
+        query
     }
 }

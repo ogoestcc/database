@@ -1,9 +1,6 @@
 use std::sync::Arc;
 
-use crate::{
-    models::{self, wherables},
-    services::{services::alerts as service, traits, types::alerts as types},
-};
+use crate::services::{models::alerts::Alert, services::alerts as service, traits};
 
 pub mod ratings;
 
@@ -13,18 +10,9 @@ pub async fn get<DB: traits::Alerts>(
 ) -> Result<service::Response, tonic::Status> {
     log::debug!("Request {:?}", request);
 
-    let r#where = if let Some(filters) = &request.r#where {
-        wherables::Alert {
-            id: filters.id.clone(),
-            content: filters.content.clone(),
-            ..Default::default()
-        }
-    } else {
-        Default::default()
-    };
-
-    let alerts: Vec<models::Alerts> = db_connection.get(r#where).await?;
-    let alerts: Vec<types::Alert> = alerts.iter().map(From::from).collect();
+    let alerts: Vec<Alert> = db_connection
+        .get(request.r#where.clone().unwrap_or_default())
+        .await?;
 
     Ok(service::Response {
         metadata: service::Metadata {
