@@ -41,32 +41,16 @@ impl Wherable for RatingWhereClause {
         &self,
         query_builder: &'q mut Q,
     ) -> &'q mut Q {
-        let query = match self.user_id {
-            Some(id) => query_builder.and_where(Expr::col(UserId).eq(id)),
-            None => query_builder,
-        };
-
-        let query = match self.alert_id.clone() {
-            Some(id) => query.and_where(Expr::col(AlertId).eq(id)),
-            None => query,
-        };
-
-        let query = match self.like {
-            Some(like) => query.and_where(Expr::col(Like).eq(like)),
-            None => query,
-        };
-
-        let query = match self.dislike {
-            Some(dislike) => query.and_where(Expr::col(Dislike).eq(dislike)),
-            None => query,
-        };
-
-        let query = match self.critical {
-            Some(critical) => query.and_where(Expr::col(Critical).eq(critical)),
-            None => query,
-        };
-
-        query
+        query_builder
+            .and_where_option(self.user_id.map(|id| Expr::col(UserId).eq(id)))
+            .and_where_option(
+                self.alert_id
+                    .as_ref()
+                    .map(|id| Expr::col(AlertId).eq(id.to_owned())),
+            )
+            .and_where_option(self.like.map(|like| Expr::col(Like).eq(like)))
+            .and_where_option(self.dislike.map(|dislike| Expr::col(Dislike).eq(dislike)))
+            .and_where_option(self.critical.map(|c| Expr::col(Critical).eq(c)))
     }
 
     fn clause(&self) -> queler::clause::Clause {

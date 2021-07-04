@@ -68,20 +68,17 @@ impl Wherable for UserWhereClause {
         &self,
         query_builder: &'q mut Q,
     ) -> &'q mut Q {
-        let query = match self.id {
-            Some(id) => query_builder.and_where(Expr::col(tables::Users::Id).eq(id)),
-            None => query_builder,
-        };
-
-        let query = match self.active {
-            Some(active) => query.and_where(Expr::col(tables::Users::Active).eq(active)),
-            None => query,
-        };
-
-        match &self.email {
-            Some(email) => query.and_where(Expr::col(tables::Users::Email).eq(email.to_owned())),
-            None => query,
-        }
+        query_builder
+            .and_where_option(self.id.map(|id| Expr::col(tables::Users::Id).eq(id)))
+            .and_where_option(
+                self.active
+                    .map(|active| Expr::col(tables::Users::Active).eq(active)),
+            )
+            .and_where_option(
+                self.email
+                    .as_ref()
+                    .map(|email| Expr::col(tables::Users::Email).eq(email.to_owned())),
+            )
     }
 }
 

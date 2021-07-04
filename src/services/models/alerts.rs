@@ -1,8 +1,11 @@
 use chrono::NaiveDateTime;
-use sea_query::Expr;
+use sea_query::{Expr, SelectStatement};
 use tokio_postgres::{row::Row, Column, Error};
 
-use crate::database::{tables, Wherable};
+use crate::database::{
+    tables::{self, Alerts, AlertsViews},
+    Wherable,
+};
 
 pub use super::types::{alert_where_clause::View, Alert, AlertWhereClause};
 
@@ -49,21 +52,37 @@ impl Wherable for AlertWhereClause {
         &self,
         query_builder: &'q mut Q,
     ) -> &'q mut Q {
-        let query = match self.id.clone() {
-            Some(id) => query_builder
-                .and_where(Expr::col((tables::Alerts::Table, tables::Alerts::Id)).eq(id)),
-            None => query_builder,
-        };
-
-        let query = match self.content.clone() {
-            Some(content) => query.and_where(
+        query_builder
+            .and_where_option(
+                self.id.as_ref().map(|id| {
+                    Expr::col((tables::Alerts::Table, tables::Alerts::Id)).eq(id.clone())
+                }),
+            )
+            .and_where_option(self.content.as_ref().map(|c| {
                 Expr::col((tables::Alerts::Table, tables::Alerts::Product))
-                    .eq(content.clone())
-                    .or(Expr::col((tables::Alerts::Table, tables::Alerts::Product)).eq(content)),
-            ),
-            None => query,
-        };
+                    .eq(c.clone())
+                    .or(Expr::col((tables::Alerts::Table, tables::Alerts::Provider)).eq(c.clone()))
+            }))
+    }
+}
 
-        query
+impl AlertWhereClause {
+    pub fn view_join<'s>(&self, select: &'s mut SelectStatement) -> &'s mut SelectStatement {
+        match self.viewer {
+            Some(View { user_id, favorited }) => {
+                let conditions = Expr::tbl(AlertsViews::Table, AlertsViews::AlertId)
+                    .equals(Alerts::Table, Alerts::Id)
+                    .and(Expr::tbl(AlertsViews::Table, AlertsViews::UserId).eq(user_id));
+
+                select.column(tables::AlertsViews::Favorited).inner_join(
+                    AlertsViews::Table,
+                    match favorited {
+                        Some(fav) => conditions.and(Expr::col(AlertsViews::Favorited).eq(fav)),
+                        None => conditions,
+                    },
+                )
+            }
+            None => select,
+        }
     }
 }
