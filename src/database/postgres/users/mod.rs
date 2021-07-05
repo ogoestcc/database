@@ -39,7 +39,7 @@ impl Database<User> for PostgresDatabase {
             users.push(User::from_row(row).map_err(Internal::from)?)
         }
 
-        Ok(users)
+        Ok(users.into())
     }
 
     async fn create(&self, user: User) -> Result<User, Error> {

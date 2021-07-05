@@ -1,5 +1,5 @@
 use chrono::NaiveDateTime;
-use sea_query::{Expr, SelectStatement};
+use sea_query::{Expr, Order, SelectStatement};
 use tokio_postgres::{row::Row, Column, Error};
 
 use crate::database::{
@@ -74,13 +74,19 @@ impl AlertWhereClause {
                     .equals(Alerts::Table, Alerts::Id)
                     .and(Expr::tbl(AlertsViews::Table, AlertsViews::UserId).eq(user_id));
 
-                select.column(tables::AlertsViews::Favorited).inner_join(
-                    AlertsViews::Table,
-                    match favorited {
-                        Some(fav) => conditions.and(Expr::col(AlertsViews::Favorited).eq(fav)),
-                        None => conditions,
-                    },
-                )
+                select
+                    .column(tables::AlertsViews::Favorited)
+                    .inner_join(
+                        AlertsViews::Table,
+                        match favorited {
+                            Some(fav) => conditions.and(Expr::col(AlertsViews::Favorited).eq(fav)),
+                            None => conditions,
+                        },
+                    )
+                    .order_by(
+                        (tables::AlertsViews::Table, tables::AlertsViews::ViewedAt),
+                        Order::Desc,
+                    )
             }
             None => select,
         }

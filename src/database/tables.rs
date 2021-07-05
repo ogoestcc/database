@@ -51,11 +51,12 @@ pub enum AlertsViews {
     UserId,
     AlertId,
     Favorited,
+    ViewedAt,
 }
 
 impl Table for AlertsViews {
     fn select() -> &'static [Self] {
-        &[Self::UserId, Self::AlertId, Self::Favorited]
+        &[Self::UserId, Self::AlertId, Self::Favorited, Self::ViewedAt]
     }
 
     fn select_table() -> &'static [(Self, Self)] {
@@ -63,6 +64,7 @@ impl Table for AlertsViews {
             (Self::Table, Self::UserId),
             (Self::Table, Self::AlertId),
             (Self::Table, Self::Favorited),
+            (Self::Table, Self::ViewedAt),
         ]
     }
 }
