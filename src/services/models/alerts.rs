@@ -63,6 +63,9 @@ impl Wherable for AlertWhereClause {
                     .eq(c.clone())
                     .or(Expr::col((tables::Alerts::Table, tables::Alerts::Provider)).eq(c.clone()))
             }))
+            .and_where_option(self.where_in.as_ref().map(|c| {
+                Expr::col((tables::Alerts::Table, tables::Alerts::Id)).is_in(c.id.to_owned())
+            }))
     }
 }
 
